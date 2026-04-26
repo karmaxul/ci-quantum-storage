@@ -1,21 +1,18 @@
 # CiSHA4096 Gas Variants
 
-This folder contains three optimized versions of CiSHA4096, balancing security strength vs gas cost.
+This folder contains three optimized versions of the CiSHA4096 contract, offering different trade-offs between security strength, diffusion quality, and gas cost.
 
 ## Variant Comparison
 
-| Variant            | Rounds | States | Approx. Gas (gasBenchmark) | Avalanche Strength | Recommended Use Case                     |
-|--------------------|--------|--------|----------------------------|--------------------|------------------------------------------|
-| **Moderate** (default) | 96   | 16     | ~2.3M – 2.9M              | Highest            | Security-critical, high-value operations |
-| **Aggressive**     | 64     | 16     | ~1.9M – 2.0M              | Strong             | General on-chain use                     |
-| **Ultra-Light**    | 32     | 8      | **~500k – 550k**          | Good               | High-frequency calls, cost-sensitive     |
+| Variant            | Rounds | States | Gas (gasBenchmark) | Diffusion Strength | Recommended Use Case                     |
+|--------------------|--------|--------|--------------------|--------------------|------------------------------------------|
+| **Moderate** (default) | 96   | 16     | ~2.3M – 2.9M      | Highest            | Security-critical, high-value operations |
+| **Aggressive**     | 64     | 16     | ~1.96M            | Strong             | General on-chain applications            |
+| **Ultra-Light**    | 32     | 8      | **~529k**         | Good               | High-frequency calls, cost-sensitive     |
 
-### Quick Start
-- `src/CiSHA4096.sol` → Moderate (default)
-- All variants support `ciSha4096()`, `gasBenchmark()`, and `verify()`
-- Ultra-Light returns `bytes32[8]` (2048-bit) for maximum speed
+### Quick Notes
+- All variants maintain the core rational Ci = 85/27 influence and repeating patterns.
+- `src/CiSHA4096.sol` is a copy of the Moderate variant (default for easy testing/deployment).
+- Ultra-Light returns `bytes32[8]` (2048-bit output) for maximum speed.
 
-### Philosophy
-All variants maintain the core rational Ci = 85/27 influence and repeating patterns that enable strong Reed-Solomon efficiency in the Python/web layer.
-
-Choose based on your gas budget and security needs.
+Choose based on your gas budget and security requirements.
