@@ -19,16 +19,17 @@ A practical demonstration of rational balance in cryptography and self-healing s
 
 All variants are available in the `variants/` folder.
 
-## CiSHA4096 vs SHA-3 Comparison
+## CiSHA4096 vs SHA-3 vs BLAKE3
 
-| Aspect                    | SHA-3 (Keccak)                  | CiSHA4096 (Current Variants)              | Notes |
-|---------------------------|---------------------------------|-------------------------------------------|-------|
-| Output Size               | 256 / 512 bit                   | 4096 bit                                  | Ci much larger |
-| Gas Cost (on-chain)       | ~150k–300k                      | 529k – 2.9M                               | SHA-3 cheaper |
-| Avalanche Quality         | Excellent (~50%)                | Good (~47–53%)                            | Very close |
-| Repeating Patterns        | Avoids them                     | Deliberate “double-helix” patterns        | Ci advantage |
-| Error Correction Synergy  | None                            | Excellent with Reed-Solomon (~39–43% savings) | **Ci wins** |
-| Constants                 | Irrational roots                | Rational Ci = 85/27                       | Philosophical difference |
+| Aspect                    | SHA-3 (Keccak)           | BLAKE3                     | CiSHA4096 (Variants)             | Notes |
+|---------------------------|--------------------------|----------------------------|----------------------------------|-------|
+| Output Size               | 256/512 bit              | 256 bit (configurable)     | 4096 bit                         | Ci is much larger |
+| Gas Cost (on-chain)       | ~150k–300k               | ~80k–200k (est.)           | 529k – 2.9M                      | BLAKE3 cheapest |
+| Speed (software)          | Fast                     | Extremely fast             | Slower                           | BLAKE3 wins |
+| Avalanche Quality         | Excellent                | Excellent                  | Good (~47–53%)                   | All strong |
+| Repeating Patterns        | Avoids                   | Avoids                     | Deliberate “double-helix”        | Ci advantage |
+| Error Correction Synergy  | None                     | None                       | Strong with Reed-Solomon (~39–43% savings) | **Ci wins** |
+| Constants                 | Irrational               | ChaCha-derived             | Rational Ci = 85/27              | Philosophical edge |
 
 ## How to Build & Test
 
@@ -46,6 +47,6 @@ forge script script/Deploy.s.sol \
   --verify
 
 Philosophy
-This project explores replacing irrational constants with rational Ci = 85/27. The resulting repeating patterns create structured redundancy that enables efficient Reed-Solomon error correction while maintaining respectable avalanche properties.
+This project explores replacing irrational constants with rational Ci = 85/27. The repeating patterns create structured redundancy that enables efficient Reed-Solomon error correction while maintaining respectable avalanche properties.
 Created in collaboration with Grok (xAI) — April 2026
 
