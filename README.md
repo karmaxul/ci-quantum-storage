@@ -19,17 +19,19 @@ A practical demonstration of rational balance in cryptography and self-healing s
 
 All variants are available in the `variants/` folder.
 
-## CiSHA4096 vs SHA-3 vs BLAKE3
+## On-Chain Self-Healing (Reed-Solomon)
 
-| Aspect                    | SHA-3 (Keccak)           | BLAKE3                     | CiSHA4096 (Variants)             | Notes |
-|---------------------------|--------------------------|----------------------------|----------------------------------|-------|
-| Output Size               | 256/512 bit              | 256 bit (configurable)     | 4096 bit                         | Ci is much larger |
-| Gas Cost (on-chain)       | ~150k–300k               | ~80k–200k (est.)           | 529k – 2.9M                      | BLAKE3 cheapest |
-| Speed (software)          | Fast                     | Extremely fast             | Slower                           | BLAKE3 wins |
-| Avalanche Quality         | Excellent                | Excellent                  | Good (~47–53%)                   | All strong |
-| Repeating Patterns        | Avoids                   | Avoids                     | Deliberate “double-helix”        | Ci advantage |
-| Error Correction Synergy  | None                     | None                       | Strong with Reed-Solomon (~39–43% savings) | **Ci wins** |
-| Constants                 | Irrational               | ChaCha-derived             | Rational Ci = 85/27              | Philosophical edge |
+We have built fully on-chain Reed-Solomon prototypes that enable **no-oracle, trustless self-healing storage**:
+
+| Contract                  | Description                              | Total Cycle Gas     | Status                  |
+|---------------------------|------------------------------------------|---------------------|-------------------------|
+| `CiOnChainRS.sol`         | Simple placeholder RS + Ci verification  | ~2.29M             | Stable                  |
+| `CiOnChainRS_Full.sol`    | Realistic GF(256) polynomial math        | ~2.9M+             | Educational / research  |
+
+**Philosophy**  
+Traditional hashes (SHA-3, BLAKE3, etc.) are designed for maximum chaos. Ci-SHA4096 deliberately creates **structured repeating patterns** using the rational constant Ci = 85/27. These patterns pair exceptionally well with Reed-Solomon codes, enabling unusually efficient error correction and self-healing on-chain.
+
+This is a practical demonstration of rational balance improving real-world primitives.
 
 ## How to Build & Test
 
@@ -37,6 +39,7 @@ All variants are available in the `variants/` folder.
 forge clean
 forge build
 forge test --match-test testGasBenchmark -vvv
+forge test --match-test testOnChainRSFullGas -vvv
 
 Deployment (Example)bash
 
@@ -46,7 +49,5 @@ forge script script/Deploy.s.sol \
   --broadcast \
   --verify
 
-Philosophy
-This project explores replacing irrational constants with rational Ci = 85/27. The repeating patterns create structured redundancy that enables efficient Reed-Solomon error correction while maintaining respectable avalanche properties.
 Created in collaboration with Grok (xAI) — April 2026
 
