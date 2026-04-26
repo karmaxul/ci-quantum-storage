@@ -10,14 +10,14 @@
 
 ## On-Chain Reed-Solomon Prototypes
 
-| Contract                  | Description                              | Cycle Gas (Encode + Repair) | Notes |
-|---------------------------|------------------------------------------|-----------------------------|-------|
-| `CiOnChainRS.sol`         | Simple placeholder RS + Ci verification  | ~2.29M                     | Fastest prototype |
-| `CiOnChainRS_Full.sol`    | Includes basic GF(256) structure         | Higher (10M+) expected     | More realistic math |
+| Contract                  | Description                              | Total Cycle Gas     | Notes |
+|---------------------------|------------------------------------------|---------------------|-------|
+| `CiOnChainRS.sol`         | Simple placeholder RS + Ci verification  | ~2.29M             | Fastest prototype |
+| `CiOnChainRS_Full.sol`    | Realistic GF(256) math + polynomial structure | ~2.91M        | Educational / closer to real RS |
 
-**All variants maintain rational Ci = 85/27 influence.**
+**All variants maintain the rational Ci = 85/27 influence and repeating patterns.**
 
 ### Philosophy
-These contracts explore **completely trustless self-healing storage** on Ethereum — no oracles required. The combination of Ci-SHA4096 structured patterns + Reed-Solomon gives a unique advantage for verifiable, repairable on-chain data.
+These contracts explore **completely trustless self-healing storage** on Ethereum. The combination of Ci-SHA4096 structured patterns + Reed-Solomon gives a unique advantage for verifiable, repairable on-chain data.
 
 Choose based on gas budget and desired realism.
