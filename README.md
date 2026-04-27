@@ -12,6 +12,13 @@ A minimal, gas-aware proof-of-concept demonstrating data that can detect corrupt
 
 Deployed: April 27, 2026
 
+## Latest Successful Deployment (Sepolia)
+
+- **CiOnChainRS_Full**: [`0x8abf4f1B58FAAF70355221187E48f7263aF5F819`](https://sepolia.etherscan.io/address/0x8abf4f1B58FAAF70355221187E48f7263aF5F819)
+- **Live Test Result**: Self-healing cycle successful (Encode ~654k gas | Repair ~133k gas)
+
+Deployed: April 27, 2026
+
 ## Quick Start
 
 ```bash
