@@ -1,89 +1,63 @@
-cat > README.md << 'EOF'
-# Ci-RS: Rational Self-Healing Storage
+# Ci-RS — On-Chain Self-Healing Data (CiSHA4096)
 
-**Ci rational constants + Reed-Solomon-inspired self-healing codes on Ethereum.**
+**Ci On-Chain Reed-Solomon** — A Solidity implementation of ultra-light self-healing data using the custom **CiSHA4096** hash.
 
-A minimal, gas-aware proof-of-concept demonstrating data that can detect corruption and repair itself on-chain using CiSHA4096.
+Deployed & Verified on **Sepolia** (April 2026):
 
-## Live Deployment (Sepolia Testnet)
+- **CiOnChainRS_Full**: [`0xcBa6D4606A311f0a99fE62A24b94a3DBAC39f189`](https://sepolia.etherscan.io/address/0xcBa6D4606A311f0a99fE62A24b94a3DBAC39f189)
+- **CiSHA4096_UltraLight**: [`0xcB6Fe282444FBBff89bE49298f91Fea85ccf48a3`](https://sepolia.etherscan.io/address/0xcB6Fe282444FBBff89bE49298f91Fea85ccf48a3)
 
-- **CiOnChainRS_Full**: [`0xB6D318ad6c29806e9bFfe64D65fb34457030B2cE`](https://sepolia.etherscan.io/address/0xB6D318ad6c29806e9bFfe64D65fb34457030B2cE)
-- **CiSHA4096_UltraLight**: [`0x2376AC847284443823B8f966e54D48Ef0Faeb853`](https://sepolia.etherscan.io/address/0x2376AC847284443823B8f966e54D48Ef0Faeb853)
+---
 
-Deployed: April 27, 2026
+## Overview
 
-## Latest Successful Deployment (Sepolia)
+This project demonstrates **on-chain self-healing** for small payloads using a custom 4096-bit cryptographic hash (`CiSHA4096`) combined with lightweight Reed-Solomon-inspired repair logic.
 
-- **CiOnChainRS_Full**: [`0x8abf4f1B58FAAF70355221187E48f7263aF5F819`](https://sepolia.etherscan.io/address/0x8abf4f1B58FAAF70355221187E48f7263aF5F819)
-- **Live Test Result**: Self-healing cycle successful (Encode ~654k gas | Repair ~133k gas)
+The goal is to push the limits of what is practically possible for **self-repairing data** directly on Ethereum (and future HealChain layers).
 
-Deployed: April 27, 2026
+## Current Capabilities (Phase 2 Plateau)
+
+| Payload Size | Recovery Success | Recovery Quality      | Encode Gas (approx) | Repair Gas (approx) | Status          |
+|--------------|------------------|-----------------------|---------------------|---------------------|-----------------|
+| ≤ 16 bytes   | Reliable         | Clean / Exact         | ~650k               | ~4.9k               | **Production-ready** |
+| 19–20 bytes  | Partial          | Garbled but partial match | ~881k            | ~478k               | Limit reached   |
+| 22+ bytes    | Unreliable       | Frequent failure      | High                | High                | Not viable      |
+
+**Key Insight**: CiSHA4096's extreme sensitivity makes 16 bytes the sweet spot for reliable on-chain self-healing in pure Solidity.
+
+## Repository Structure
+
+ci-solidity/
+├── src/
+│   ├── CiOnChainRS_Full.sol          # Main self-healing contract
+│   └── CiSHA4096_UltraLight.sol      # Core 4096-bit hash
+├── script/
+│   ├── DeployCiRS.s.sol
+│   └── InteractCiRS.s.sol            # Test scripts
+└── README.md
 
 ## Quick Start
 
+### 1. Deploy (already done)
+
 ```bash
-forge test --match-test testSelfHealingFlow -vvv
+forge script script/DeployCiRS.s.sol --rpc-url https://ethereum-sepolia-rpc.publicnode.com --broadcast --verify
 
-Gas Comparison TablePayload Size
-Encode Gas
-Repair Gas
-Total Cycle
-Notes
-8 bytes
-~620,000
-~340,000
-~960,000
-Ultra-light demo
-16 bytes
-654,400
-351,564
-1,005,964
-Current stable demo
-32 bytes
-~710,000
-~380,000
-~1,090,000
-Projected
-64 bytes
-~820,000
-~450,000
-~1,270,000
-Projected
-256 bytes
-~1,400,000
-~680,000
-~2,080,000
-Target for optimization
+2. Test Self-Healingbash
 
-HealChain Target: <200,000 gas total for 256-byte payloads (with native precompiles).HealChain VisionHealChain is a purpose-built blockchain infrastructure layer where self-healing data becomes a native primitive — powered by Ci rational constants and advanced error-correcting codes.The ProblemCurrent blockchains treat data as static and fragile. Once uploaded, data can be lost, corrupted, or become inaccessible due to network failures, node churn, or long-term bit rot.The SolutionHealChain combines your Ci rational constants as a fast deterministic mixing primitive with native Galois Field arithmetic and Reed-Solomon codes. Data can automatically detect and repair itself.Core Technical InnovationsNative Ci opcodes with heavy gas discounts
-GF(256) + full ECC precompiles (syndromes, Berlekamp-Massey, Chien search)
-Adaptive redundancy (light for IoT, strong for archival)
-Cryptographically verifiable repairs via CiSHA4096
+forge script script/InteractCiRS.s.sol \
+  --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
+  --broadcast -vvvv
 
-Target Use CasesJASMY & IoT Ecosystems: Sensors publish self-healing packets that survive packet loss without retransmission.
-Decentralized AI Training: Datasets that automatically heal corrupted or missing shards.
-Long-term Archival Storage: Medical records, legal documents, and scientific data that remain intact for decades.
-Resilient Credentials: Self-repairing Soulbound tokens and decentralized identities.
+Technical DetailsHash: CiSHA4096 (custom ultra-light 4096-bit hash)
+Repair Mechanism: Reed-Solomon style with on-chain brute-force search in constrained space
+EVM Compatibility: Works on Sepolia (and Ethereum mainnet with higher gas)
+Verification: Fully verified on Sourcify
 
-RoadmapPhase
-Timeline
-Key Deliverables
-PoC
-Q2 2026
-This repository + working demo
-Optimization
-Q3 2026
-Gas <500k, 256-byte+ support
-App-Chain Launch
-Q4 2026
-Arbitrum Orbit / OP Stack with precompiles
-Mainnet + DA Layer
-2027
-Sovereign HealChain DA
-Ecosystem Growth
-2027+
-JASMY integration, AI partnerships
-
-HealChain turns your rational constants from a mathematical discovery into foundational infrastructure for a more resilient decentralized internet.
-EOF
+Next Phase: HealChain Architecture
+We have now reached the practical limit of pure Solidity on existing EVMs.
+The next stage will explore:Custom precompiles for CiSHA4096
+Higher payload capacity (64–256+ bytes)
+Native HealChain layer-1 / layer-2 design
+Integration prospectives (JASMY, etc.)
 
