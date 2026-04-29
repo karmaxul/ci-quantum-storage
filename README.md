@@ -1,144 +1,120 @@
-<<<<<<< Updated upstream
-# Ci-RS — On-Chain Self-Healing Data (CiSHA4096)
+# HealChain Self-Healing System
 
-**Ci On-Chain Reed-Solomon** — A Solidity implementation of ultra-light self-healing data using the custom **CiSHA4096** hash.
-
-Deployed & Verified on **Sepolia** (April 2026):
-
-- **CiOnChainRS_Full**: [`0xcBa6D4606A311f0a99fE62A24b94a3DBAC39f189`](https://sepolia.etherscan.io/address/0xcBa6D4606A311f0a99fE62A24b94a3DBAC39f189)
-- **CiSHA4096_UltraLight**: [`0xcB6Fe282444FBBff89bE49298f91Fea85ccf48a3`](https://sepolia.etherscan.io/address/0xcB6Fe282444FBBff89bE49298f91Fea85ccf48a3)
-
----
+A lightweight Reed-Solomon based self-healing data encoding library designed for blockchain environments (Harmony, Cosmos SDK, EVM).
 
 ## Overview
 
-This project demonstrates **on-chain self-healing** for small payloads using a custom 4096-bit cryptographic hash (`CiSHA4096`) combined with lightweight Reed-Solomon-inspired repair logic.
+HealChain encodes data with redundancy so that corruption can be detected and repaired automatically.
 
-The goal is to push the limits of what is practically possible for **self-repairing data** directly on Ethereum (and future HealChain layers).
+### Key Features
 
-## Current Capabilities (Phase 2 Plateau)
+- Reed-Solomon encoding with per-shard SHA256 integrity checks
+- Cosmos SDK / EVM Precompile support
+- Solidity helper interface
+- Lightweight on-chain verification contract
+- Clean, modular Go implementation
 
-| Payload Size | Recovery Success | Recovery Quality      | Encode Gas (approx) | Repair Gas (approx) | Status          |
-|--------------|------------------|-----------------------|---------------------|---------------------|-----------------|
-| ≤ 16 bytes   | Reliable         | Clean / Exact         | ~650k               | ~4.9k               | **Production-ready** |
-| 19–20 bytes  | Partial          | Garbled but partial match | ~881k            | ~478k               | Limit reached   |
-| 22+ bytes    | Unreliable       | Frequent failure      | High                | High                | Not viable      |
+## Project Structure
 
-**Key Insight**: CiSHA4096's extreme sensitivity makes 16 bytes the sweet spot for reliable on-chain self-healing in pure Solidity.
-
-## Repository Structure
-
-ci-solidity/
-├── src/
-│   ├── CiOnChainRS_Full.sol          # Main self-healing contract
-│   └── CiSHA4096_UltraLight.sol      # Core 4096-bit hash
-├── script/
-│   ├── DeployCiRS.s.sol
-│   └── InteractCiRS.s.sol            # Test scripts
+ci-sha-test/
+├── healchain/                  # Core library
+│   ├── healchain.go
+│   └── precompile.go
+├── app.go                      # Bootstrap & testing
+├── demo.go                     # Quick demo
+├── HealChainInterface.sol      # Solidity interface
+├── HealChainRS.sol             # On-chain verifier
+├── test/HealChain.t.sol        # Foundry tests
 └── README.md
 
 ## Quick Start
 
-### 1. Deploy (already done)
-=======
-## Live Demo (Web App)
-**Current URL:** `https://ci-quantum-storage-5gk9.onrender.com` (or your latest Render URL)
-
-## How to Run Locally
->>>>>>> Stashed changes
-
 ```bash
-forge script script/DeployCiRS.s.sol --rpc-url https://ethereum-sepolia-rpc.publicnode.com --broadcast --verify
+go run demo.go
+go run app.go
 
-2. Test Self-Healingbash
+Usage ExamplesGogo
 
-<<<<<<< Updated upstream
-forge script script/InteractCiRS.s.sol \
-  --rpc-url https://ethereum-sepolia-rpc.publicnode.com \
-  --broadcast -vvvv
+import "ci-sha-test/healchain"
 
-Technical DetailsHash: CiSHA4096 (custom ultra-light 4096-bit hash)
-Repair Mechanism: Reed-Solomon style with on-chain brute-force search in constrained space
-EVM Compatibility: Works on Sepolia (and Ethereum mainnet with higher gas)
-Verification: Fully verified on Sourcify
+rs, err := healchain.New(10, 4)
+encoded, _ := rs.Encode(data)
+recovered, _ := rs.Decode(encodedData)
 
-Next Phase: HealChain Architecture
-We have now reached the practical limit of pure Solidity on existing EVMs.
-The next stage will explore:Custom precompiles for CiSHA4096
-Higher payload capacity (64–256+ bytes)
-Native HealChain layer-1 / layer-2 design
-Integration prospectives (JASMY, etc.)
-=======
-Also update the **Live Contract** section if needed.
+Precompile (Cosmos SDK)See healchain/precompile.go for registration details.Soliditysolidity
 
----
+HealChainInterface hc = new HealChainInterface();
+bytes memory encoded = hc.encode(originalData);
+bytes memory recovered = hc.decode(encoded);
 
-### 3. Full Updated Sharing Text (Ready to Use)
+Tuning GuidePayload Size
+dataShards
+parityShards
+Approximate Overhead
+Notes
+32–64 bytes
+8
+4
+~50%
+Small payloads
+64–128 bytes
+10
+4
+~40%
+Balanced default
+128–256 bytes
+12
+5
+~42%
+General purpose
+256–512 bytes
+16
+6
+~38%
+Larger data
+512+ bytes
+20+
+8
+~40%
+High redundancy
 
-**For GitHub / X / LinkedIn:**
+Choose values based on your acceptable overhead and expected corruption rate.Architecture Diagram (Text)
 
-```text
-Ci Quantum-Inspired Storage — Exploring rational cryptography with Ci = 85/27.
+Original Data
+      ↓
+[ Split into Data Shards ]
+      ↓
+[ Generate Parity Shards ]
+      ↓
+[ Compute SHA256 per shard ]
+      ↓
+[ Header + Shards + Hashes ]
+      ↓
+   Encoded Blob (self-healing)
 
-Features:
-• Repeating "double-helix" patterns in hashes
-• Reed-Solomon protected web storage
-• Live Solidity contract on Sepolia (16 states, ~2M gas)
+On Receive:
+   Decode → Check Hashes → Mark Bad Shards → Reconstruct → Output
 
-Live Web Demo: https://ci-quantum-storage-5gk9.onrender.com
-GitHub: https://github.com/karmaxul/ci-quantum-storage
-Live Contract: 0x6Db61C27F196704519c7Eb6a6FaB1E017B7e0514
+Gas Cost Estimates (Approximate)These are rough observations from Remix / local testing:encode(): ~25k–60k gas (depending on size)
+decode() (healing): ~40k–90k gas
+verify(): ~15k–35k gas
 
-Curious about what rational constants could enable in primitives. Feedback welcome. 🌱
+Note: Actual gas usage depends heavily on payload size, shard configuration, and chain implementation.Security ConsiderationsThis library provides error correction, not cryptographic security.
+Always combine with proper encryption/signatures when confidentiality or authenticity is required.
+The precompile runs in the EVM execution environment — review carefully before mainnet deployment.
+Header parsing and length fields should be treated as untrusted input.
+Test thoroughly with your specific corruption patterns.
 
-## Philosophy
+Roadmap (Current Ideas)Support for optional compression before encoding
+Dynamic/adaptive shard sizing
+Integration examples with common Cosmos modules
+More comprehensive test coverage
+Community feedback and improvements
 
-This project explores the 9-bit → 12-bit precision upgrade using rational constants for better balance and stability in computational primitives.
+(No specific timelines or guarantees are provided.)Contribution GuidelinesContributions are welcome. Please:Open an issue first for major changes
+Keep code style consistent
+Add tests for new functionality
+Update documentation as needed
 
-### Motivation & History of Rational Constants
-
-Traditional cryptographic hashes (SHA-256, SHA-512, etc.) rely almost exclusively on **irrational constants** (square roots of small primes) to maximize chaos and avalanche. The goal has historically been to eliminate detectable patterns.
-
-This project deliberately explores the opposite direction: using **rational constants** (specifically Ci = 85/27, derived from physical scaling principles) to create structured, repeating "double-helix" patterns. While this might seem counter-intuitive for security, it opens the door to better error correction, stabilizer-like behavior, and philosophical alignment with natural balance.
-
-Rational constants have appeared sparingly in cryptography history (early mechanical ciphers, some stream cipher designs, and certain coding theory constructions), but they remain underexplored in modern hash functions. This work continues the spirit of the original 9-bit → 12-bit fraction concept, asking whether structured redundancy can be a feature rather than a bug when combined with Reed-Solomon and other tools.
-
-The result is a hash that maintains respectable avalanche (~47–53%) while producing clear, analyzable repeating patterns — something that may prove useful for verification, storage, or quantum-inspired applications.
-
-
-## Features
-- **Ci-SHA4096 v2.4**: 4096-bit output with 100/100 Ci Signature Score
-- Reed-Solomon error correction for protected, self-healing storage
-- Persistent storage with Gzip compression
-- Flask web interface (Store, Retrieve, Test Erasure, Stabilizer Demo, Download)
-- **Solidity on-chain PoC** (16 states, Ci influence, deployed on Sepolia)
-
-### How Ci-SHA4096 + Reed-Solomon Work Together
-
-- **Ci-SHA4096** creates a strong, structured 4096-bit fingerprint (hash) of your data.
-- **Reed-Solomon** adds powerful error-correction parity symbols, allowing recovery even if parts of the stored block are damaged or lost.
-- When retrieving: Reed-Solomon first attempts to repair the data, then the system re-computes the Ci-SHA4096 hash and verifies it matches the stored hash.
-- Result: Self-verifying, self-healing storage with structured redundancy from the rational constant Ci = 85/27.
-
-This combination is one of the core innovations of the project.
-
-**Created in collaboration with Grok (xAI) — April 2026**
-
-## Features
-- **Ci-SHA4096 v2.4**: 4096-bit output with 100/100 Ci Signature Score
-- Reed-Solomon error correction for protected, self-healing storage
-- Persistent storage with Gzip compression
-- Flask web interface (Store, Retrieve, Test Erasure, Stabilizer Demo, Download)
-- **Solidity on-chain PoC** (16 states, Ci influence, deployed on Sepolia)
-
-### Security & Gas Summary
-- **Gas Benchmark**: ~2.06 million gas (optimized version with 8 active states + simplified diffusion)
-- **Security Notes**: Fully deterministic view function with safe arithmetic (full uint256 masking). Rational Ci = 85/27 adds structured redundancy (beneficial for error correction when paired with Reed-Solomon). Includes on-chain `verify()` helper for cross-checking against Python reference. Not intended for cryptographic signing or key derivation — best used as a verifiable hash + storage primitive.
-- Reed-Solomon typically adds ~39–43% parity overhead but enables recovery from multiple errors per block.
-
-## Live Contract (Sepolia)
-**Address:** `0x6Db61C27F196704519c7Eb6a6FaB1E017B7e0514`  
-[View on Sepolia Etherscan](https://sepolia.etherscan.io/address/0x6Db61C27F196704519c7Eb6a6FaB1E017B7e0514)
-
->>>>>>> Stashed changes
+Feel free to submit Pull Requests.StatusCore functionality is implemented and tested in local environments.
 
