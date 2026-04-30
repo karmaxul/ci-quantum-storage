@@ -1,66 +1,47 @@
-# HealChain / Ci-RS Roadmap
+# HealChain Roadmap
 
-**Self-Healing Data Infrastructure**
-
-**Last Updated**: April 28, 2026
+**Current Status**: Phase 1 — Hybrid Architecture Complete (Stable)
 
 ---
 
 ## Phase 0 – Foundation (Completed ✅)
 
-- [x] CiSHA4096_UltraLight implementation
-- [x] CiOnChainRS_Full with on-chain repair
-- [x] Sepolia deployment + Sourcify verification
-- [x] Phase 2 plateau documentation (16-byte reliable sweet spot)
-- [x] HealChain Architecture Draft v0.1.1
+## Phase 1 – Hybrid Architecture & Scaling (Completed ✅ — April 30, 2026)
+
+**Achievements:**
+- Full Flask + Go hybrid system
+- Dynamic shards + compression
+- Storage Summary dashboard
+- Large payload testing + real healing time
+- Complete block lifecycle (store, retrieve, test, download, delete)
+- Logging, status indicators, anchor navigation
+- Stable performance (~40% overhead at scale, <2ms healing)
+
+**Remaining Nice-to-Haves for Phase 1:**
+- Minor UI polish (if desired)
+- Docker setup
+- Enhanced benchmark visualization (optional)
 
 ---
 
-## Phase 1 – Precompiles & Scaling (Q2–Q3 2026)
+## Phase 2 – Precompiles & Devnet (Q3–Q4 2026)
 
-- [ ] Finalize CiSHA4096 & CiRSRepair precompile specifications
-- [ ] Implement precompiles (Go/Rust) in local geth fork
-- [ ] Launch HealChain Devnet (single sequencer)
-- [ ] Achieve reliable **256-byte** self-healing payloads
-- [ ] Gas benchmarking & optimization
-- [ ] Port existing contracts to use precompiles
-
-**Target**: 50–200x speedup + much higher payload capacity
+- HealChain precompiles in custom geth fork
+- Devnet launch with native self-healing support
+- Gas optimization and benchmarking
+- Economic model for repair incentives
 
 ---
 
-## Phase 2 – HealChain L1 Devnet → Testnet (Q3–Q4 2026)
+## Phase 3 – Testnet & Ecosystem (2027+)
 
-- [ ] Full custom EVM chain launch (op-geth or Reth based)
-- [ ] Native HealBlock + Self-Healing Transaction types
-- [ ] Economic incentives (repair participation rewards)
-- [ ] Basic explorer + RPC endpoints
-- [ ] Security audit (pre-audit + formal audit)
-
-**Target**: Public testnet with 1 KB+ reliable payloads
+- Public testnet
+- SDKs and integrations
+- JASMY / IoT exploration
+- Security audit + mainnet readiness
 
 ---
 
-## Phase 3 – Ecosystem & Mainnet (2027+)
+**We move fast but carefully.**
 
-- [ ] Mainnet launch
-- [ ] Optimistic / ZK Heal-Rollups
-- [ ] Integration exploration with complementary projects (IoT, storage layers, etc.)
-- [ ] Developer SDKs (JS, Python, full Solidity library)
-- [ ] Production use cases (decentralized identity, sensor data, documents)
-
----
-
-## Open Items / Nice-to-Haves
-
-- Dynamic redundancy levels
-- Multi-block repair for large payloads
-- Tokenomics design
-- Governance model
-- JASMY ecosystem compatibility exploration (non-binding)
-
----
-
-**Status**: Phase 0 Complete → Entering Phase 1
-
-We move fast but carefully. Contributions and feedback welcome.
+Last Updated: April 30, 2026
