@@ -12,10 +12,10 @@ import (
 
 const (
     Version     byte = 0x01
-    HeaderSize       = 1 + 4 + 2 + 2 // version + length + dataShards + parityShards
+    HeaderSize       = 1 + 4 + 2 + 2 // version + origLen + dataShards + parityShards
 )
 
-// HealChainRS is the main self-healing Reed-Solomon engine
+// HealChainRS is the core self-healing engine
 type HealChainRS struct {
     dataShards   int
     parityShards int
@@ -24,6 +24,9 @@ type HealChainRS struct {
 
 // New creates a new HealChainRS instance
 func New(dataShards, parityShards int) (*HealChainRS, error) {
+    if dataShards < 1 || parityShards < 1 {
+        return nil, fmt.Errorf("invalid shard configuration")
+    }
     enc, err := reedsolomon.New(dataShards, parityShards)
     if err != nil {
         return nil, err
@@ -35,7 +38,7 @@ func New(dataShards, parityShards int) (*HealChainRS, error) {
     }, nil
 }
 
-// Encode returns a self-healing encoded blob (header + shards + hashes)
+// Encode creates a self-healing blob: [header] + [shards] + [per-shard SHA256]
 func (h *HealChainRS) Encode(data []byte) ([]byte, error) {
     if len(data) == 0 {
         return nil, fmt.Errorf("empty data")
@@ -49,7 +52,7 @@ func (h *HealChainRS) Encode(data []byte) ([]byte, error) {
         return nil, err
     }
 
-    // Per-shard SHA256 hashes
+    // Per-shard hashes for corruption detection
     hashes := make([][]byte, len(shards))
     for i, s := range shards {
         h := sha256.Sum256(s)
@@ -75,7 +78,7 @@ func (h *HealChainRS) Encode(data []byte) ([]byte, error) {
     return buf.Bytes(), nil
 }
 
-// Decode detects corruption via hashes and performs self-healing
+// Decode detects corruption via hashes and repairs
 func (h *HealChainRS) Decode(encoded []byte) ([]byte, error) {
     if len(encoded) < HeaderSize {
         return nil, fmt.Errorf("data too short")
@@ -90,12 +93,13 @@ func (h *HealChainRS) Decode(encoded []byte) ([]byte, error) {
     dataShards := int(binary.BigEndian.Uint16(encoded[5:7]))
     parityShards := int(binary.BigEndian.Uint16(encoded[7:9]))
 
+    // Reconfigure encoder if needed
     if h.dataShards != dataShards || h.parityShards != parityShards {
-        var err error
-        h.enc, err = reedsolomon.New(dataShards, parityShards)
+        enc, err := reedsolomon.New(dataShards, parityShards)
         if err != nil {
             return nil, err
         }
+        h.enc = enc
         h.dataShards = dataShards
         h.parityShards = parityShards
     }
@@ -115,7 +119,7 @@ func (h *HealChainRS) Decode(encoded []byte) ([]byte, error) {
         shardStart = end
     }
 
-    // Detect & mark bad shards
+    // Detect bad shards using hashes
     hashStart := HeaderSize + totalShards*shardSize
     for i := range shards {
         if hashStart+32 > len(encoded) {
@@ -125,13 +129,13 @@ func (h *HealChainRS) Decode(encoded []byte) ([]byte, error) {
         hashStart += 32
 
         if len(shards[i]) == 0 || sha256.Sum256(shards[i]) != *(*[32]byte)(stored) {
-            shards[i] = nil
+            shards[i] = nil // mark for reconstruction
         }
     }
 
     // Self-healing
     if err := h.enc.Reconstruct(shards); err != nil {
-        return nil, err
+        return nil, fmt.Errorf("reconstruction failed: %w", err)
     }
 
     var buf bytes.Buffer

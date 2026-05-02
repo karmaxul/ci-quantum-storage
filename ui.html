@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HealChain Precompile Tester</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>HealChain Precompile Test</h1>
+    <button onclick="testEncode()">Test Encode</button>
+    <pre id="result"></pre>
+
+    <script>
+        const web3 = new Web3("http://localhost:8545");
+
+        async function testEncode() {
+            try {
+                const data = "0x4865616c436861696e2074657374";
+                const result = await web3.eth.call({
+                    to: "0x0000000000000000000000000000000000000400",
+                    data: web3.eth.abi.encodeFunctionCall({
+                        name: "encode",
+                        type: "function",
+                        inputs: [
+                            {type: "bytes", name: "data"},
+                            {type: "uint8", name: "dataShards"},
+                            {type: "uint8", name: "parityShards"}
+                        ]
+                    }, [data, 10, 4])
+                });
+                document.getElementById("result").textContent = "Encoded (hex): " + result;
+                console.log("Success:", result);
+            } catch (err) {
+                document.getElementById("result").textContent = "Error: " + err.message;
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>

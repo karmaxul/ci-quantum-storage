@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  healchain:
+    build: .
+    ports:
+      - "5000:5000"   # Flask UI
+      - "8080:8080"   # Go backend
+    volumes:
+      - ./web_blocks.json:/app/web_blocks.json
+      - ./healchain.log:/app/healchain.log
+      - ./data:/data
+    environment:
+      - GO_SERVICE_URL=http://localhost:8080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s

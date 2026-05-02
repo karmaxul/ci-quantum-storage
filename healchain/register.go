@@ -1,19 +1,10 @@
 package healchain
 
-import (
-    "fmt"
-    "log"
+import "fmt"
 
-    "github.com/ethereum/go-ethereum/core/vm"
-)
-
-func RegisterWithEVM(evm *vm.EVM) error {
-    pre, err := NewPrecompile(10, 4)
-    if err != nil {
-        return err
-    }
-
-    evm.SetPrecompile(pre.Address(), pre)
-    fmt.Printf("✅ HealChain Self-Healing Precompile registered at %s\n", HealChainPrecompileAddress)
+// RegisterWithEVM is a placeholder for future geth fork integration.
+// It is not required for standalone library usage.
+func RegisterWithEVM(evm interface{}) error {
+    fmt.Println("⚠️  RegisterWithEVM called - not implemented in standalone mode")
     return nil
 }

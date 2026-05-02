@@ -1,0 +1,10 @@
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+.DS_Store
+*.log
+ci_venv
+healchain-devnet
+healchain-geth

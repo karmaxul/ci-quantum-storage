@@ -16,6 +16,7 @@ type Precompile struct {
 
 var _ vm.PrecompiledContract = (*Precompile)(nil)
 
+// NewPrecompile creates a new precompile instance
 func NewPrecompile(dataShards, parityShards int) (*Precompile, error) {
     rs, err := New(dataShards, parityShards)
     if err != nil {
@@ -29,7 +30,8 @@ func (p *Precompile) Address() common.Address {
 }
 
 func (p *Precompile) RequiredGas(input []byte) uint64 {
-    return 80000 + uint64(len(input))*150
+    // Rough estimate - can be tuned later
+    return 80000 + uint64(len(input))*120
 }
 
 func (p *Precompile) Run(input []byte) (ret []byte, err error) {
@@ -42,9 +44,9 @@ func (p *Precompile) Run(input []byte) (ret []byte, err error) {
     switch method {
     case 0x01: // Encode
         return p.rs.Encode(input[1:])
-    case 0x02: // Decode + Heal
+    case 0x02: // Decode + Self-Heal
         return p.rs.Decode(input[1:])
-    case 0x03: // Verify only
+    case 0x03: // Verify only (no repair)
         ok, origLen := p.verifyOnly(input[1:])
         result := make([]byte, 64)
         if ok {
@@ -61,6 +63,7 @@ func (p *Precompile) Name() string {
     return "HealChainRS"
 }
 
+// verifyOnly checks header and returns success + original length
 func (p *Precompile) verifyOnly(encoded []byte) (bool, uint32) {
     if len(encoded) < HeaderSize || encoded[0] != Version {
         return false, 0
