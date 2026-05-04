@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +8,8 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
+    /* ── Themes ── */
+    :root[data-theme="dark"] {
       --bg:      #0a0e17;
       --surface: #111827;
       --surface2:#162033;
@@ -17,11 +18,23 @@
       --accent2: #7c3aed;
       --success: #10b981;
       --error:   #ef4444;
-      --warn:    #f59e0b;
       --text:    #e2e8f0;
       --muted:   #64748b;
-      --mono:    'JetBrains Mono', monospace;
-      --sans:    'Syne', sans-serif;
+      --grid:    rgba(31,45,69,0.4);
+    }
+
+    :root[data-theme="light"] {
+      --bg:      #f0f4f8;
+      --surface: #ffffff;
+      --surface2:#e8f0f8;
+      --border:  #cbd5e1;
+      --accent:  #0284c7;
+      --accent2: #7c3aed;
+      --success: #059669;
+      --error:   #dc2626;
+      --text:    #0f172a;
+      --muted:   #64748b;
+      --grid:    rgba(203,213,225,0.4);
     }
 
     body {
@@ -30,6 +43,10 @@
       font-family: var(--sans);
       min-height: 100vh;
       padding: 40px 20px;
+      transition: background 0.2s, color 0.2s;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Syne', sans-serif;
+      font-family: var(--sans);
     }
 
     body::before {
@@ -37,10 +54,9 @@
       position: fixed;
       inset: 0;
       background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
       background-size: 40px 40px;
-      opacity: 0.25;
       pointer-events: none;
       z-index: 0;
     }
@@ -48,7 +64,16 @@
     .container { max-width: 880px; margin: 0 auto; position: relative; z-index: 1; }
 
     /* ── Header ── */
-    header { margin-bottom: 40px; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .header-left {}
 
     .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
 
@@ -77,10 +102,23 @@
       border-radius: 50%; background: var(--success);
       margin-right: 6px; animation: pulse 2s infinite;
     }
-
     .status-dot.err { background: var(--error); animation: none; }
-
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* ── Theme toggle ── */
+    .theme-toggle {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
     /* ── Cards ── */
     .card {
@@ -113,11 +151,9 @@
       font-family: var(--mono); font-size: 14px;
       outline: none; transition: border-color 0.2s;
     }
-
     input[type="text"]:focus { border-color: var(--accent); }
     input[type="text"].invalid { border-color: var(--error); }
 
-    .field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--mono); }
     .field-error { font-size: 11px; color: var(--error); margin-top: 4px; font-family: var(--mono); display: none; }
 
     /* ── Buttons ── */
@@ -130,7 +166,7 @@
     }
 
     .btn-primary { background: var(--accent); color: var(--bg); }
-    .btn-primary:hover:not(:disabled) { background: #33ddff; transform: translateY(-1px); }
+    .btn-primary:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
 
     .btn-secondary {
       background: transparent; color: var(--accent);
@@ -145,10 +181,8 @@
     .btn-danger:hover:not(:disabled) { background: rgba(239,68,68,.08); }
 
     .btn-sm { padding: 6px 12px; font-size: 11px; }
-
     button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    /* ── Inline row ── */
     .row { display: flex; gap: 10px; align-items: flex-end; }
     .row .field { flex: 1; margin-bottom: 0; }
 
@@ -160,7 +194,6 @@
       min-height: 52px; white-space: pre-wrap; word-break: break-all;
       color: var(--muted); margin-top: 14px;
     }
-
     .result-box.ok  { border-color: var(--success); color: var(--success); }
     .result-box.err { border-color: var(--error);   color: var(--error); }
     .result-box a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
@@ -177,12 +210,49 @@
     .copy-btn:hover { background: rgba(0,212,255,.2); }
     .copy-btn.copied { color: var(--success); border-color: var(--success); }
 
-    /* ── Records list ── */
-    .records-header {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
+    /* ── Records controls ── */
+    .records-controls {
+      display: flex; gap: 10px; align-items: center;
+      margin-bottom: 16px; flex-wrap: wrap;
     }
 
+    .search-input {
+      flex: 1; min-width: 160px;
+      padding: 9px 14px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text);
+      font-family: var(--mono); font-size: 13px;
+      outline: none; transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
+    .page-size-select {
+      padding: 9px 12px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text);
+      font-family: var(--mono); font-size: 13px;
+      outline: none; cursor: pointer;
+    }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; margin-top: 16px; font-family: var(--mono); font-size: 13px;
+    }
+
+    .page-btn {
+      padding: 6px 12px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); cursor: pointer; font-family: var(--mono);
+      font-size: 12px; transition: all 0.15s;
+    }
+    .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+    .page-info { color: var(--muted); font-size: 12px; }
+
+    /* ── Record items ── */
     .record-item {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -197,22 +267,14 @@
 
     .record-id {
       font-size: 11px; color: var(--accent); font-weight: 600;
-      background: rgba(0,212,255,.08); padding: 3px 8px;
-      border-radius: 4px;
+      background: rgba(0,212,255,.08); padding: 3px 8px; border-radius: 4px;
     }
 
-    .record-label { color: var(--text); font-size: 13px; }
+    .record-label { color: var(--text); font-size: 13px; margin-left: 10px; }
 
     .record-meta {
       font-size: 11px; color: var(--muted);
       display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;
-    }
-
-    .record-preview {
-      color: var(--text); font-size: 12px;
-      background: var(--bg); border-radius: 5px;
-      padding: 6px 10px; overflow: hidden;
-      text-overflow: ellipsis; white-space: nowrap;
     }
 
     .record-actions { display: flex; gap: 6px; margin-top: 10px; }
@@ -222,21 +284,6 @@
       color: var(--muted); font-family: var(--mono); font-size: 13px;
     }
 
-    /* ── Toast ── */
-    #toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; padding: 12px 18px;
-      font-family: var(--mono); font-size: 13px;
-      color: var(--text); z-index: 100;
-      transform: translateY(80px); opacity: 0;
-      transition: all 0.3s; pointer-events: none;
-    }
-
-    #toast.show { transform: translateY(0); opacity: 1; }
-    #toast.ok   { border-color: var(--success); color: var(--success); }
-    #toast.err  { border-color: var(--error);   color: var(--error); }
-
     /* ── Spinner ── */
     .spinner {
       display: inline-block; width: 13px; height: 13px;
@@ -244,8 +291,20 @@
       border-radius: 50%; animation: spin .7s linear infinite;
       vertical-align: middle; margin-right: 6px;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 18px;
+      font-family: var(--mono); font-size: 13px; color: var(--text);
+      z-index: 100; transform: translateY(80px); opacity: 0;
+      transition: all 0.3s; pointer-events: none;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.ok   { border-color: var(--success); color: var(--success); }
+    #toast.err  { border-color: var(--error);   color: var(--error); }
 
     /* ── Responsive ── */
     @media (max-width: 600px) {
@@ -253,6 +312,7 @@
       h1 { font-size: 1.5rem; }
       .row { flex-direction: column; }
       .row button { width: 100%; }
+      header { flex-direction: column; }
     }
   </style>
 </head>
@@ -260,15 +320,18 @@
 <div class="container">
 
   <header>
-    <div class="logo">
-      <div class="logo-icon">⛓</div>
-      <h1>HealChain</h1>
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon">⛓</div>
+        <h1>HealChain</h1>
+      </div>
+      <div class="status-bar">
+        <span id="svc-status"><span class="status-dot"></span>Service: localhost:8080</span>
+        <span id="geth-status"><span class="status-dot"></span>Geth: connecting...</span>
+        <span id="records-status" style="display:none"></span>
+      </div>
     </div>
-    <div class="status-bar">
-      <span id="svc-status"><span class="status-dot"></span>Service: localhost:8080</span>
-      <span id="geth-status"><span class="status-dot"></span>Geth: localhost:8545</span>
-      <span id="contract-status" style="display:none"></span>
-    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀ Light Mode</button>
   </header>
 
   <!-- Store -->
@@ -312,32 +375,74 @@
     <div class="result-box" id="retrieveResult">Enter a record ID and click Retrieve.</div>
   </div>
 
+<!-- Metadata -->
+  <div class="card">
+    <div class="card-title">// Record Metadata</div>
+    <div class="row">
+      <div class="field">
+        <label>Record ID</label>
+        <input type="text" id="metadataId" value="0" placeholder="0">
+      </div>
+      <button class="btn-primary" id="metadataBtn" onclick="getMetadata()" style="margin-bottom:0">
+        Get Metadata
+      </button>
+    </div>
+    <div class="result-box" id="metadataResult">Enter a record ID and click Get Metadata.</div>
+  </div>
+
   <!-- Records -->
   <div class="card">
-    <div class="records-header">
-      <div class="card-title" style="margin-bottom:0">// Recent Records</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="text" id="maxRecords" value="10" placeholder="10"
-          style="width:64px;padding:8px 10px;margin:0">
-        <button class="btn-secondary btn-sm" id="refreshBtn" onclick="loadRecords()">Refresh</button>
-      </div>
+    <div class="card-title">// Records Browser</div>
+
+    <div class="records-controls">
+      <input class="search-input" type="text" id="searchInput"
+        placeholder="Search by label..." oninput="filterRecords()">
+      <select class="page-size-select" id="pageSizeSelect" onchange="changePageSize()">
+        <option value="5">5 per page</option>
+        <option value="10" selected>10 per page</option>
+        <option value="25">25 per page</option>
+        <option value="50">50 per page</option>
+      </select>
+      <button class="btn-secondary btn-sm" id="refreshBtn" onclick="loadRecords(0)">Refresh</button>
     </div>
+
     <div id="records-list"><div class="empty-state">Click Refresh to load records.</div></div>
+
+    <div class="pagination" id="pagination" style="display:none"></div>
   </div>
 
 </div>
 
-<!-- Toast -->
 <div id="toast"></div>
 
 <script>
   const SVC = "http://localhost:8080";
-  // Update for testnet:
-  //   Sepolia:  https://sepolia.etherscan.io/tx
-  //   Mainnet:  https://etherscan.io/tx
-  const EXPLORER_BASE = "https://sepolia.etherscan.io/tx";
+  const EXPLORER_BASE = "https://sepolia.etherscan.io/tx"; // update for testnet
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // ── State ─────────────────────────────────────────────────────────────────
+  let currentPage  = 0;
+  let totalPages   = 1;
+  let totalRecords = 0;
+  let allRecords   = []; // cached for client-side filtering
+
+  // ── Theme ─────────────────────────────────────────────────────────────────
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute("data-theme") === "dark";
+    html.setAttribute("data-theme", isDark ? "light" : "dark");
+    document.getElementById("themeBtn").textContent = isDark ? "🌙 Dark Mode" : "☀ Light Mode";
+    localStorage.setItem("theme", isDark ? "light" : "dark");
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem("theme") || "dark";
+    document.documentElement.setAttribute("data-theme", saved);
+    document.getElementById("themeBtn").textContent =
+      saved === "dark" ? "☀ Light Mode" : "🌙 Dark Mode";
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   function strToHex(str) {
     return "0x" + Array.from(new TextEncoder().encode(str))
@@ -370,23 +475,53 @@
     el._t = setTimeout(() => { el.className = ""; }, 3000);
   }
 
-  function copyToClipboard(text, btn) {
+function copyToClipboard(text, btn) {
+  // Try modern clipboard API first (requires HTTPS or localhost)
+  if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
       btn.textContent = "✓ copied";
       btn.classList.add("copied");
       setTimeout(() => { btn.textContent = "copy"; btn.classList.remove("copied"); }, 1500);
-    });
+    }).catch(() => fallbackCopy(text, btn));
+  } else {
+    fallbackCopy(text, btn);
+  }
+}
+
+function fallbackCopy(text, btn) {
+  // Fallback: create a temporary textarea and use execCommand
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand("copy");
+    btn.textContent = "✓ copied";
+    btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = "copy"; btn.classList.remove("copied"); }, 1500);
+  } catch {
+    btn.textContent = "failed";
+    setTimeout(() => { btn.textContent = "copy"; }, 1500);
+  }
+  document.body.removeChild(ta);
+}
+
+  function clearStore() {
+    setResult("storeResult", "Waiting for input...", "");
+    document.getElementById("dataInput").classList.remove("invalid");
+    document.getElementById("dataErr").style.display = "none";
   }
 
-  // ── Validation ───────────────────────────────────────────────────────────────
+  // ── Validation ─────────────────────────────────────────────────────────────
 
   function validateData() {
     const val = document.getElementById("dataInput").value.trim();
     const err = document.getElementById("dataErr");
     const inp = document.getElementById("dataInput");
-    if (!val) {
-      inp.classList.add("invalid"); err.style.display = "block"; return false;
-    }
+    if (!val) { inp.classList.add("invalid"); err.style.display = "block"; return false; }
     inp.classList.remove("invalid"); err.style.display = "none"; return true;
   }
 
@@ -394,34 +529,38 @@
     const val = document.getElementById("labelInput").value;
     const err = document.getElementById("labelErr");
     const inp = document.getElementById("labelInput");
-    if (val.length > 64) {
-      inp.classList.add("invalid"); err.style.display = "block"; return false;
-    }
+    if (val.length > 64) { inp.classList.add("invalid"); err.style.display = "block"; return false; }
     inp.classList.remove("invalid"); err.style.display = "none"; return true;
   }
 
-  // ── Status check ─────────────────────────────────────────────────────────────
+  // ── Status ─────────────────────────────────────────────────────────────────
 
   async function checkStatus() {
     try {
-      const res = await fetch(`${SVC}/health`);
+      const res  = await fetch(`${SVC}/health`);
       const json = await res.json();
+
       document.getElementById("svc-status").innerHTML =
-        `<span class="status-dot"></span>Service: localhost:8080`;
+        `<span class="status-dot"></span>Service v${json.version}`;
+
       document.getElementById("geth-status").innerHTML =
         json.geth === "ok"
-          ? `<span class="status-dot"></span>Geth: block ${json.lastBlock}`
+          ? `<span class="status-dot"></span>Geth: block ${json.lastBlock} · chain ${json.chainId}`
           : `<span class="status-dot err"></span>Geth: unreachable`;
-      const cs = document.getElementById("contract-status");
-      cs.style.display = "inline";
-      cs.innerHTML = `<span class="status-dot"></span>Records: ${json.totalRecords || "?"}`;
+
+      // Fetch total from stats
+      const sr = await fetch(`${SVC}/stats`);
+      const sj = await sr.json();
+      const rs = document.getElementById("records-status");
+      rs.style.display = "inline";
+      rs.innerHTML = `<span class="status-dot"></span>Records: ${sj.totalRecords}`;
     } catch {
       document.getElementById("svc-status").innerHTML =
         `<span class="status-dot err"></span>Service: unreachable`;
     }
   }
 
-  // ── Store ────────────────────────────────────────────────────────────────────
+  // ── Store ──────────────────────────────────────────────────────────────────
 
   async function storeData() {
     if (!validateData() || !validateLabel()) return;
@@ -433,12 +572,11 @@
     setResult("storeResult", "Sending to service...", "");
 
     try {
-      const res = await fetch(`${SVC}/storeOnChain`, {
+      const res  = await fetch(`${SVC}/storeOnChain`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data: strToHex(raw), label })
       });
-
       const json = await res.json();
 
       if (!res.ok) {
@@ -448,21 +586,22 @@
       }
 
       const txLink = `<a href="${EXPLORER_BASE}/${json.tx}" target="_blank" rel="noopener">${escapeHtml(json.tx)}</a>`;
-      const retrieveLink = `<a href="${SVC}/retrieve?id=${json.recordId}" target="_blank" rel="noopener">${escapeHtml(json.retrieveUrl)}</a>`;
+      const retUrl = `${SVC}/retrieve?id=${json.recordId}`;
 
       setResult("storeResult",
         `✅ Stored successfully!\n` +
-        `Record ID:    ${escapeHtml(json.recordId)} <button class="copy-btn" onclick="copyToClipboard('${json.recordId}', this)">copy</button>\n` +
+        `Record ID:    ${escapeHtml(json.recordId)} <button class="copy-btn" onclick="copyToClipboard('${json.recordId}',this)">copy</button>\n` +
         `Tx:           ${txLink}\n` +
         `Original:     ${escapeHtml(json.originalSize)} bytes\n` +
         `Encoded:      ${escapeHtml(json.encodedSize)} bytes\n` +
-        `Retrieve URL: ${retrieveLink} <button class="copy-btn" onclick="copyToClipboard('${SVC}/retrieve?id=${json.recordId}', this)">copy</button>`,
+        `Retrieve URL: <a href="${retUrl}" target="_blank">${escapeHtml(retUrl)}</a> <button class="copy-btn" onclick="copyToClipboard('${retUrl}',this)">copy</button>`,
         "ok"
       );
 
       document.getElementById("retrieveId").value = json.recordId;
-      toast("✅ Stored successfully!", "ok");
-      loadRecords();
+      toast("✅ Stored!", "ok");
+      loadRecords(0);
+      checkStatus();
 
     } catch (err) {
       setResult("storeResult", `❌ Network error: ${escapeHtml(err.message)}`, "err");
@@ -472,19 +611,11 @@
     }
   }
 
-  function clearStore() {
-    setResult("storeResult", "Waiting for input...", "");
-    document.getElementById("dataInput").classList.remove("invalid");
-    document.getElementById("dataErr").style.display = "none";
-  }
-
-  // ── Retrieve ─────────────────────────────────────────────────────────────────
+  // ── Retrieve ───────────────────────────────────────────────────────────────
 
   async function retrieveData(id) {
-    const idVal = id !== undefined ? id : document.getElementById("retrieveId").value.trim();
-    if (idVal === "") {
-      setResult("retrieveResult", "⚠ Enter a record ID.", "err"); return;
-    }
+    const idVal = id !== undefined ? String(id) : document.getElementById("retrieveId").value.trim();
+    if (!idVal) { setResult("retrieveResult", "⚠ Enter a record ID.", "err"); return; }
     if (id === undefined) document.getElementById("retrieveId").value = idVal;
 
     setLoading("retrieveBtn", true, "Retrieving...");
@@ -506,7 +637,6 @@
         `Size: ${json.bytes} bytes`,
         "ok"
       );
-
     } catch (err) {
       setResult("retrieveResult", `❌ Network error: ${escapeHtml(err.message)}`, "err");
     } finally {
@@ -514,7 +644,47 @@
     }
   }
 
-  // ── Delete ───────────────────────────────────────────────────────────────────
+// ── Metadata ───────────────────────────────────────────────────────────────
+
+  async function getMetadata(id) {
+    const idVal = id !== undefined ? String(id) : document.getElementById("metadataId").value.trim();
+    if (!idVal) { setResult("metadataResult", "⚠ Enter a record ID.", "err"); return; }
+    if (id === undefined) document.getElementById("metadataId").value = idVal;
+
+    setLoading("metadataBtn", true, "Loading...");
+    setResult("metadataResult", "Fetching metadata...", "");
+
+    try {
+      const res  = await fetch(`${SVC}/getMetadata?id=${encodeURIComponent(idVal)}`);
+      const json = await res.json();
+
+      if (!res.ok) {
+        setResult("metadataResult", `❌ Error: ${escapeHtml(json.error || res.statusText)}`, "err");
+        return;
+      }
+
+      const ts = new Date(parseInt(json.timestamp) * 1000).toLocaleString();
+
+      setResult("metadataResult",
+        `✅ Record ${escapeHtml(json.recordId)}\n` +
+        `Label:         ${escapeHtml(json.label)}\n` +
+        `Owner:         ${escapeHtml(json.owner)}\n` +
+        `Original size: ${escapeHtml(json.originalSize)} bytes\n` +
+        `Encoded size:  ${escapeHtml(json.encodedSize)} bytes\n` +
+        `Data shards:   ${json.dataShards}   Parity shards: ${json.parityShards}\n` +
+        `Timestamp:     ${escapeHtml(ts)}\n` +
+        `Data hash:     ${escapeHtml(json.dataHash)}`,
+        "ok"
+      );
+
+    } catch (err) {
+      setResult("metadataResult", `❌ Network error: ${escapeHtml(err.message)}`, "err");
+    } finally {
+      setLoading("metadataBtn", false, "Get Metadata");
+    }
+  }
+
+  // ── Delete ─────────────────────────────────────────────────────────────────
 
   async function deleteRecord(id) {
     if (!confirm(`Delete record ${id}? This cannot be undone.`)) return;
@@ -522,63 +692,44 @@
     try {
       const res  = await fetch(`${SVC}/delete?id=${id}`);
       const json = await res.json();
-      if (!res.ok) {
-        toast(`Delete failed: ${json.error}`, "err"); return;
-      }
+      if (!res.ok) { toast(`Delete failed: ${json.error}`, "err"); return; }
       toast(`✅ Record ${id} deleted`, "ok");
-      loadRecords();
+      loadRecords(currentPage);
+      checkStatus();
     } catch (err) {
       toast("Network error: " + err.message, "err");
     }
   }
 
-  // ── Records list ─────────────────────────────────────────────────────────────
+  // ── Records with pagination ────────────────────────────────────────────────
 
-  async function loadRecords() {
-    const max  = parseInt(document.getElementById("maxRecords").value) || 10;
-    const list = document.getElementById("records-list");
-    const btn  = document.getElementById("refreshBtn");
+  async function loadRecords(page = 0) {
+    const limit = parseInt(document.getElementById("pageSizeSelect").value) || 10;
+    const list  = document.getElementById("records-list");
+    const btn   = document.getElementById("refreshBtn");
+    const pag   = document.getElementById("pagination");
 
+    currentPage = page;
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner"></span>Loading...`;
     list.innerHTML = "";
+    pag.style.display = "none";
 
     try {
-      const res  = await fetch(`${SVC}/listRecords`);
+      const res  = await fetch(`${SVC}/listRecords?page=${page}&limit=${limit}`);
       const json = await res.json();
 
-      if (!res.ok || !json.records) {
+      if (!res.ok) {
         list.innerHTML = `<div class="empty-state">Failed to load records.</div>`;
         return;
       }
 
-      const records = json.records.slice(0, max);
+      allRecords   = json.records || [];
+      totalPages   = json.pages   || 1;
+      totalRecords = json.total   || 0;
 
-      if (records.length === 0) {
-        list.innerHTML = `<div class="empty-state">No records found. Store some data first.</div>`;
-        return;
-      }
-
-      list.innerHTML = records.map(r => `
-        <div class="record-item">
-          <div class="record-top">
-            <div>
-              <span class="record-id">ID ${escapeHtml(r.id)}</span>
-              <span class="record-label" style="margin-left:10px">${escapeHtml(r.label)}</span>
-            </div>
-            <div class="record-actions">
-              <button class="btn-secondary btn-sm" onclick="retrieveData('${r.id}')">Retrieve</button>
-              <button class="btn-danger btn-sm" onclick="deleteRecord('${r.id}')">Delete</button>
-            </div>
-          </div>
-          <div class="record-meta">
-            <span>Original: ${r.originalSize} bytes</span>
-            <span>Encoded: ${r.encodedSize} bytes</span>
-            <span>Shards: ${r.dataShards}+${r.parityShards}</span>
-            <span>Owner: ${r.owner.slice(0,10)}...</span>
-          </div>
-        </div>
-      `).join("");
+      renderRecords(allRecords);
+      renderPagination(page, totalPages, limit);
 
     } catch (err) {
       list.innerHTML = `<div class="empty-state">Error: ${escapeHtml(err.message)}</div>`;
@@ -588,12 +739,90 @@
     }
   }
 
-  // ── Init ─────────────────────────────────────────────────────────────────────
+  function renderRecords(records) {
+    const list = document.getElementById("records-list");
+    const search = document.getElementById("searchInput").value.toLowerCase().trim();
+
+    const filtered = search
+      ? records.filter(r => r.label.toLowerCase().includes(search) || r.id.includes(search))
+      : records;
+
+    if (filtered.length === 0) {
+      list.innerHTML = search
+        ? `<div class="empty-state">No records match "<strong>${escapeHtml(search)}</strong>".</div>`
+        : `<div class="empty-state">No records found. Store some data first.</div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map(r => `
+      <div class="record-item">
+        <div class="record-top">
+          <div>
+            <span class="record-id">ID ${escapeHtml(r.id)}</span>
+            <span class="record-label">${escapeHtml(r.label)}</span>
+          </div>
+          <div class="record-actions">
+            <button class="btn-secondary btn-sm" onclick="retrieveData('${r.id}')">Retrieve</button>
+            <button class="btn-secondary btn-sm" onclick="getMetadata('${r.id}')">Metadata</button>
+            <button class="btn-danger btn-sm" onclick="deleteRecord('${r.id}')">Delete</button>
+          </div>
+        </div>
+        <div class="record-meta">
+          <span>Original: ${r.originalSize} bytes</span>
+          <span>Encoded: ${r.encodedSize} bytes</span>
+          <span>Shards: ${r.dataShards}+${r.parityShards}</span>
+          <span>Owner: ${r.owner.slice(0,10)}...</span>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function filterRecords() {
+    renderRecords(allRecords);
+  }
+
+  function changePageSize() {
+    loadRecords(0);
+  }
+
+  function renderPagination(page, pages, limit) {
+    const pag = document.getElementById("pagination");
+    if (pages <= 1) { pag.style.display = "none"; return; }
+
+    pag.style.display = "flex";
+
+    let html = `
+      <button class="page-btn" onclick="loadRecords(${page - 1})" ${page === 0 ? "disabled" : ""}>← Prev</button>
+    `;
+
+    // Show up to 5 page buttons centered around current
+    const start = Math.max(0, page - 2);
+    const end   = Math.min(pages - 1, page + 2);
+
+    if (start > 0) html += `<button class="page-btn" onclick="loadRecords(0)">1</button>`;
+    if (start > 1) html += `<span class="page-info">…</span>`;
+
+    for (let i = start; i <= end; i++) {
+      html += `<button class="page-btn ${i === page ? "active" : ""}" onclick="loadRecords(${i})">${i + 1}</button>`;
+    }
+
+    if (end < pages - 2) html += `<span class="page-info">…</span>`;
+    if (end < pages - 1) html += `<button class="page-btn" onclick="loadRecords(${pages - 1})">${pages}</button>`;
+
+    html += `
+      <button class="page-btn" onclick="loadRecords(${page + 1})" ${page >= pages - 1 ? "disabled" : ""}>Next →</button>
+      <span class="page-info">${totalRecords} total</span>
+    `;
+
+    pag.innerHTML = html;
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
 
   window.onload = () => {
+    initTheme();
     checkStatus();
-    loadRecords();
-    // Refresh status every 15 seconds
+    loadRecords(0);
     setInterval(checkStatus, 15000);
   };
 </script>
