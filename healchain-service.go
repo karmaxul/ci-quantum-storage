@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+    "strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -96,6 +97,24 @@ func gethClient() (*ethclient.Client, error) {
 	return ethclient.Dial(gethURL)
 }
 
+// ── CORS middleware ───────────────────────────────────────────────────────────
+
+func withCORS(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		// Handle preflight
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		h.ServeHTTP(w, r)
+	})
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 func main() {
@@ -123,10 +142,10 @@ func main() {
 		w.Write([]byte("Nuclear test successful"))
 	})
 
-	srv := &http.Server{
-		Addr:    listenAddr,
-		Handler: mux,
-	}
+srv := &http.Server{
+    Addr:    listenAddr,
+    Handler: withCORS(mux),
+}
 
 	// Graceful shutdown on SIGTERM / SIGINT
 	go func() {
@@ -409,7 +428,7 @@ func storeOnChain(data []byte, dataShards, parityShards uint8, label string) (tx
 	if err != nil {
 		return "", "", "", "", fmt.Errorf("failed to create transactor: %w", err)
 	}
-	auth.GasLimit = 5_000_000
+	auth.GasLimit = 10_000_000
 
 	var tx *types.Transaction
 	for attempt := 1; attempt <= 3; attempt++ {
@@ -579,6 +598,20 @@ func handleGetMetadata(w http.ResponseWriter, r *http.Request) {
 func handleListRecords(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("=== LIST RECORDS ===")
 
+	// Parse pagination params
+	pageStr  := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	page := 0
+	limit := 10
+
+	if p, err := strconv.Atoi(pageStr); err == nil && p >= 0 {
+		page = p
+	}
+	if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 50 {
+		limit = l
+	}
+
 	if err := checkGeth(); err != nil {
 		jsonErr(w, http.StatusInternalServerError, "geth not reachable: "+err.Error())
 		return
@@ -603,6 +636,13 @@ func handleListRecords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	totalInt := int(total.Int64())
+	start := page * limit
+	end := start + limit
+	if end > totalInt {
+		end = totalInt
+	}
+
 	type Record struct {
 		ID           string `json:"id"`
 		Label        string `json:"label"`
@@ -615,18 +655,12 @@ func handleListRecords(w http.ResponseWriter, r *http.Request) {
 	}
 
 	records := []Record{}
-	n := total.Int64()
 
-	// Cap at 100 to avoid extremely long responses
-	if n > 100 {
-		n = 100
-	}
-
-	for i := int64(0); i < n; i++ {
-		id := big.NewInt(i)
+	for i := start; i < end; i++ {
+		id := big.NewInt(int64(i))
 		meta, err := instance.GetMetadata(nil, id)
 		if err != nil {
-			continue // skip deleted or inaccessible records
+			continue
 		}
 		records = append(records, Record{
 			ID:           fmt.Sprintf("%d", i),
@@ -642,7 +676,10 @@ func handleListRecords(w http.ResponseWriter, r *http.Request) {
 
 	jsonOK(w, map[string]interface{}{
 		"status":  "success",
-		"total":   total.String(),
+		"total":   totalInt,
+		"page":    page,
+		"limit":   limit,
+		"pages":   (totalInt + limit - 1) / limit,
 		"records": records,
 	})
 }
@@ -690,7 +727,7 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 		jsonErr(w, http.StatusInternalServerError, "failed to create transactor: "+err.Error())
 		return
 	}
-	auth.GasLimit = 500_000
+auth.GasLimit = 1_000_000
 
 	tx, err := instance.Remove(auth, id)
 	if err != nil {
