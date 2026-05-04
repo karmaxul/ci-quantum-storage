@@ -1,10 +1,50 @@
-__pycache__
-*.pyc
-*.pyo
+# ─────────────────────────────────────────────────────────────────────────────
+# .dockerignore
+# Keeps the Docker build context lean by excluding files that don't need
+# to be sent to the Docker daemon.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Git
 .git
 .gitignore
-.DS_Store
+
+# Build artifacts (we copy geth-custom explicitly)
 *.log
-ci_venv
-healchain-devnet
-healchain-geth
+/tmp
+
+# Go build cache
+go/pkg
+vendor/
+
+# Foundry artifacts (not needed in service container)
+foundry/out
+foundry/cache
+foundry/broadcast
+
+# Data directories
+healchain-data/
+healchain-data2/
+
+# Environment files with secrets (managed by start-docker.sh)
+# .env is intentionally NOT ignored — Docker Compose needs it
+# But never commit it to git
+*.env.local
+*.env.secret
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+*.test
+*_test.go
+
+# Other scripts not needed in container
+start.sh
+start-docker.sh

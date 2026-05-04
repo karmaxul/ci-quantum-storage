@@ -1,0 +1,35 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Dockerfile.geth
+# Packages the pre-compiled custom Geth binary with RS precompiles.
+#
+# The binary is compiled on the host (go build ./cmd/geth) and copied in.
+# This avoids needing the full Go toolchain + all go-ethereum dependencies
+# inside Docker.
+#
+# To rebuild the binary on host:
+#   cd ~/ci-sha-project
+#   go build -o geth-custom ./cmd/geth
+# ─────────────────────────────────────────────────────────────────────────────
+
+FROM ubuntu:24.04
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the pre-compiled custom Geth binary
+COPY geth-custom /usr/local/bin/geth-custom
+RUN chmod +x /usr/local/bin/geth-custom
+
+EXPOSE 8545
+
+CMD ["geth-custom", \
+     "--dev", \
+     "--http", \
+     "--http.api", "eth,web3,net,debug", \
+     "--http.corsdomain", "*", \
+     "--http.vhosts", "*", \
+     "--http.addr", "0.0.0.0", \
+     "--http.port", "8545", \
+     "--datadir", "/data"]

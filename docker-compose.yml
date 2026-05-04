@@ -1,21 +1,45 @@
-version: '3.9'
-
 services:
-  healchain:
-    build: .
+
+  geth:
+    build:
+      context: .
+      dockerfile: Dockerfile.geth
     ports:
-      - "5000:5000"   # Flask UI
-      - "8080:8080"   # Go backend
+      - "8545:8545"
     volumes:
-      - ./web_blocks.json:/app/web_blocks.json
-      - ./healchain.log:/app/healchain.log
-      - ./data:/data
-    environment:
-      - GO_SERVICE_URL=http://localhost:8080
+      - geth-data:/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000"]
-      interval: 15s
+      test: ["CMD", "curl", "-sf",
+             "-X", "POST", "http://localhost:8545",
+             "-H", "Content-Type: application/json",
+             "-d", '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}']
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+
+  rs-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+    ports:
+      - "8080:8080"
+    environment:
+      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS:-0x5FbDB2315678afecb367f032d93F642f64180aa3}
+      - STORE_PRIVATE_KEY=${STORE_PRIVATE_KEY:-b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291}
+      - GETH_URL=http://geth:8545
+      - LISTEN_ADDR=:8080
+    depends_on:
+      geth:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 15s
+
+volumes:
+  geth-data:

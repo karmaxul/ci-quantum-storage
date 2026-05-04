@@ -39,3 +39,17 @@ deployments/
 # Temporary
 *.tmp
 
+healchain-data/
+healchain-data2/
+healchain-data-new/
+geth-custom
+.env
+Dockerfile.old
+healchain-service.go.save
+healchain-service
+backups/
+*.deb
+foundry/healchain.go
+foundry/script/Counter.s.sol
+foundry/src/Counter.sol
+foundry/test/Counter.t.sol
