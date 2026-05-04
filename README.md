@@ -1,109 +1,106 @@
-# 🌌 HealChain — Quantum-Inspired Self-Healing Storage
+# 🌌 HealChain — Self-Healing Blockchain Storage
 
-**Hybrid Self-Healing Storage System**  
-Flask Frontend + Go Reed-Solomon Backend
+**Reed-Solomon Erasure Coding + On-Chain Storage on Ethereum**
 
----
-
-## Current Status (April 30, 2026)
-
-Current StatusPrecompiles: Encode, Decode, Stabilize, Stats working
-Service: HTTP bridge with RS
-Devnet: 2 nodes connected
-UI: Basic tester page
-Tests: All passing
-
-### Key Features
-- Dynamic Reed-Solomon erasure coding (configurable data + parity shards)
-- Gzip compression before encoding
-- Live Global Storage Summary dashboard
-- Large payload testing (1KB / 5KB / 10KB+)
-- Realistic self-healing with timing measurements
-- Full block lifecycle: Store, Retrieve, Test Erasure, Stabilizer Demo, Download, Delete
-- Search, copy ID, floating navigation buttons
-- Persistent storage (`web_blocks.json`)
-- Real-time service health indicators (Green/Red)
-- Comprehensive logging
-
-### Performance Highlights
-- ~40–41% storage overhead at 50–120KB payloads
-- Sub-2ms healing simulation times
-- Excellent scaling with shard count
+A complete hybrid self-healing storage system that encodes data with Reed-Solomon, stores encoded shards on-chain, and can recover data even if multiple shards are lost or corrupted.
 
 ---
 
-## 🚀 Quick Start — Docker (Recommended)
+## Current Status (May 2026)
 
-### One-command deployment
+**Fully Operational End-to-End**
+
+- Custom Geth with Reed-Solomon precompiles (`0x0400`–`0x0403`)
+- Go REST API service with full contract integration
+- Solidity `HealChainStorage` contract (store, retrieve, metadata, delete)
+- Docker-first deployment with one-command startup
+- Working browser UI (store, retrieve, list, delete)
+
+**Verified Flow**: Raw data → RS Encode (precompile) → On-chain storage → Retrieve + Decode ✅
+
+---
+
+## 🚀 Quick Start
+
+### Docker (Recommended)
 
 ```bash
-# 1. Clone the repo (if not already done)
 git clone https://github.com/karmaxul/ci-quantum-storage.git
 cd ci-quantum-storage
+./start-docker.sh
 
-# 2. Start the full system
-docker compose up --build -d
+Local (Non-Docker)bash
 
-Open → http://127.0.0.1:5000Docker Commandsbash
+cd ~/ci-sha-project
+./start.sh
 
-# Start in background
-docker compose up --build -d
+Quick Testbash
 
-# View live logs
-docker compose logs -f
+# Store data
+curl -X POST http://localhost:8080/storeOnChain \
+  -H "Content-Type: application/json" \
+  -d '{"data": "4865616c436861696e2074657374", "label": "test"}'
 
-# Restart
-docker compose restart
+# Retrieve data
+curl "http://localhost:8080/retrieve?id=0"
 
-# Stop
-docker compose down
-
-# Full reset (deletes volumes)
-docker compose down -v
-
-Ports:5000 → Flask Web UI
-8080 → Go Self-Healing Service
-
-Manual Setup (Alternative)PrerequisitesGo 1.24+
-Python 3.12+
-pip install flask requests gunicorn
-
-Run Servicesbash
-
-# Terminal 1 - Go Backend
-go run healchain-service.go
-
-# Terminal 2 - Flask UI
-python app.py
+Available EndpointsMethod
+Endpoint
+Description
+POST
+/storeOnChain
+Encode + store on-chain
+GET
+/retrieve?id=XX
+Retrieve + full decode
+GET
+/getMetadata?id=XX
+Get full record metadata
+GET
+/listRecords
+List all records (with preview)
+DELETE
+/delete?id=XX
+Delete record (owner only)
+GET
+/health
+System + Geth health status
+GET
+/stats
+Statistics and total records
 
 Project Structure
 
-.
-├── Dockerfile                  # Multi-stage build
+ci-quantum-storage/
+├── geth-custom                    # Custom Geth with precompiles
+├── healchain-service.go           # Main Go REST API
+├── start.sh                       # Local one-command launcher
+├── start-docker.sh                # Docker one-command launcher
 ├── docker-compose.yml
-├── start-docker.sh
-├── requirements.txt
-├── app.py                      # Flask UI + frontend logic
-├── healchain-service.go        # Go HTTP service
-├── healchain/                  # Core Go library (Reed-Solomon, stabilizer, etc.)
-├── ci_sha4096_v2_4.py
-├── ci_rs_wrapper.py
-├── web_blocks.json             # Persistent block storage
-├── healchain.log               # Runtime logs
-├── ROADMAP.md
-├── HealChain-Architecture-Draft.md
-└── Precompile-Spec.md
+├── Dockerfile.geth
+├── Dockerfile.service
+├── foundry/                       # Solidity contracts + tests
+├── frontend/                      # Browser UI
+└── healchain/                     # Core Reed-Solomon library
 
-Architecture OverviewGo Backend: High-performance Reed-Solomon encoding/decoding + self-healing engine
-Flask UI: Modern, responsive interface with real-time stats
-Hybrid Mode: UI calls Go service via HTTP for heavy operations
-Persistence: web_blocks.json + volume mounts in Docker
-Future: EVM Precompiles + HealChain Devnet (Phase 2)
+Tech StackCustom Geth — Modified client-go with Reed-Solomon precompiles
+Solidity + Foundry — Smart contract development and deployment
+Go — High-performance REST service and contract integration
+Docker — Containerized, reproducible deployment
+Reed-Solomon — Erasure coding for data resilience
 
-Next Steps (Phase 2)Integrate Reed-Solomon as EVM precompiles in custom Geth fork
-Deploy HealChain Devnet
-On-chain stabilizer and healing proofs
-Gas optimization variants
+Potential RoadmapShort-term Final polish of browser UI (search, filters, dark/light mode)
+Add pagination and improved UX to record listing
+Better input validation and rate limiting
 
-See ROADMAP.md and HealChain-Architecture-Draft.md for details.ContributingContributions welcome! Feel free to open issues or PRs.Made with  for resilient decentralized storageLast updated: April 30, 2026
+Medium-term Deploy to public testnet (Sepolia)
+Add API key authentication
+Data compression before encoding
+Basic monitoring dashboard
+
+Long-termFully decentralized frontend (IPFS + WalletConnect)
+Cross-chain shard distribution
+Community governance and incentives
+
+ContributingContributions are welcome! Feel free to open issues or submit pull requests.LicenseMIT License — see LICENSE for details.Made with  for resilient decentralized storage
 
