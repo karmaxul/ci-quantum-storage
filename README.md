@@ -48,6 +48,40 @@ Raw data → RS Encode (EVM precompile) → On-chain shards → Retrieve → RS 
 
 ### Docker (Recommended)
 
+## Live Testnet Deployment
+
+HealChain is deployed and operational on Ethereum Sepolia testnet.
+
+| | |
+|---|---|
+| **Contract** | `0xBffb39930647DBB5971690ea6e9F0CF393307e64` |
+| **Network** | Ethereum Sepolia (Chain ID: 11155111) |
+| **Oracle** | `0x96243925D8588E332d8ff54c71936Ca2dC5f2aE2` |
+| **Explorer** | [View on Etherscan](https://sepolia.etherscan.io/address/0xBffb39930647DBB5971690ea6e9F0CF393307e64) |
+
+### Store data on Sepolia
+
+```bash
+cast send 0xBffb39930647DBB5971690ea6e9F0CF393307e64 \
+  "store(bytes,string)" \
+  0x4865616c436861696e2074657374 \
+  "my first record" \
+  --rpc-url https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY \
+  --private-key YOUR_PRIVATE_KEY
+```
+
+The oracle will automatically detect the request and fulfill it within ~15 seconds.
+
+### Architecture on Sepolia
+
+User → store() → EncodeRequested event
+↓ (oracle polls every 15s)
+Go service RS-encodes off-chain
+↓
+fulfillStore() → shards stored on-chain
+
+---
+
 ```bash
 git clone https://github.com/karmaxul/ci-quantum-storage.git
 cd ci-quantum-storage
@@ -202,7 +236,7 @@ Default configuration: **10 data shards + 4 parity shards** (tolerates up to 4 s
 ## Roadmap
 
 ### Near-term
-- [ ] Public testnet deployment (Sepolia) via wrapper contract architecture
+- [x] Public testnet deployment (Sepolia) — oracle pattern, live at `0xBffb39930647DBB5971690ea6e9F0CF393307e64`
 - [ ] API key authentication
 - [ ] Data compression before RS encoding
 - [ ] Monitoring dashboard
