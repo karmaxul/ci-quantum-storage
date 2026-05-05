@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/hex"
 	"encoding/json"
@@ -61,6 +63,33 @@ func validateInput(data []byte, label string) error {
 		return fmt.Errorf("label too long: %d chars (max %d)", len(label), maxLabelBytes)
 	}
 	return nil
+}
+
+// ── Compression helpers ───────────────────────────────────────────────────────
+
+func compressData(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	w := gzip.NewWriter(&buf)
+	if _, err := w.Write(data); err != nil {
+		return nil, fmt.Errorf("compress: write failed: %w", err)
+	}
+	if err := w.Close(); err != nil {
+		return nil, fmt.Errorf("compress: close failed: %w", err)
+	}
+	return buf.Bytes(), nil
+}
+
+func decompressData(data []byte) ([]byte, error) {
+	r, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("decompress: reader failed: %w", err)
+	}
+	defer r.Close()
+	var buf bytes.Buffer
+	if _, err := buf.ReadFrom(r); err != nil {
+		return nil, fmt.Errorf("decompress: read failed: %w", err)
+	}
+	return buf.Bytes(), nil
 }
 
 // ── JSON helpers ──────────────────────────────────────────────────────────────
@@ -451,8 +480,17 @@ func handleStoreOnChain(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("StoreOnChain: %d bytes, label: %s, shards: %d/%d\n",
 		len(data), req.Label, req.DataShards, req.ParityShards)
 
+	// Compress before RS encoding
+	compressed, err := compressData(data)
+	if err != nil {
+		jsonErr(w, http.StatusInternalServerError, "compression failed: "+err.Error())
+		return
+	}
+	fmt.Printf("Compressed: %d → %d bytes (%.0f%%)\n",
+		len(data), len(compressed), float64(len(compressed))/float64(len(data))*100)
+
 	txHash, recordID, originalSize, encodedSize, err := storeOnChain(
-		data, req.DataShards, req.ParityShards, req.Label)
+		compressed, req.DataShards, req.ParityShards, req.Label)
 	if err != nil {
 		jsonErr(w, http.StatusInternalServerError, err.Error())
 		return
@@ -596,13 +634,22 @@ func handleRetrieve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("✅ Retrieved record %s: %d bytes\n", idStr, len(decoded))
+	// Decompress after RS decoding
+	decompressed, err := decompressData(decoded)
+	if err != nil {
+		// Fallback: data may not be compressed (backward compat)
+		fmt.Printf("⚠ Decompress failed, returning raw: %v\n", err)
+		decompressed = decoded
+	}
+
+	fmt.Printf("✅ Retrieved record %s: %d bytes (decompressed from %d)\n",
+		idStr, len(decompressed), len(decoded))
 	jsonOK(w, map[string]interface{}{
 		"status":   "success",
 		"recordId": idStr,
-		"data":     "0x" + hex.EncodeToString(decoded),
-		"text":     string(decoded),
-		"bytes":    len(decoded),
+		"data":     "0x" + hex.EncodeToString(decompressed),
+		"text":     string(decompressed),
+		"bytes":    len(decompressed),
 	})
 }
 
