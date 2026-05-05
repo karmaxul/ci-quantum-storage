@@ -168,22 +168,25 @@ func main() {
 	// ── Start Sepolia oracle if configured ───────────────────────────────────
 	sepoliaRPC := getEnv("SEPOLIA_RPC_URL", "")
 	sepoliaContract := getEnv("SEPOLIA_CONTRACT_ADDRESS", "")
+	oracleKey := getEnv("ORACLE_PRIVATE_KEY", storePrivateKey)
 
 	if sepoliaRPC != "" && sepoliaContract != "" {
 		oracleCfg := OracleConfig{
 			SepoliaRPC:      sepoliaRPC,
 			ContractAddress: sepoliaContract,
-			PrivateKey:      getEnv("ORACLE_PRIVATE_KEY", storePrivateKey),
+			PrivateKey:      oracleKey,
 			ChainID:         11155111,
 			PollInterval:    15 * time.Second,
+			Confirmations:   2,
+			StateFile:       "/tmp/oracle-state.json",
 		}
 		oracle, err := NewOracle(oracleCfg)
 		if err != nil {
 			fmt.Println("Oracle init failed:", err)
 		} else {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			go oracle.Start(ctx)
+			oracleCtx, oracleCancel := context.WithCancel(context.Background())
+			defer oracleCancel()
+			go oracle.Start(oracleCtx)
 		}
 	} else {
 		fmt.Println("ℹ️  SEPOLIA_RPC_URL not set — oracle watcher disabled")

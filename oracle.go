@@ -4,8 +4,11 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -19,6 +22,8 @@ import (
 	"ci-sha-test/healchain"
 )
 
+// ── Configuration ─────────────────────────────────────────────────────────────
+
 // OracleConfig holds all configuration for the Sepolia oracle.
 type OracleConfig struct {
 	SepoliaRPC      string
@@ -26,7 +31,40 @@ type OracleConfig struct {
 	PrivateKey      string
 	ChainID         int64
 	PollInterval    time.Duration
+	Confirmations   uint64 // blocks to wait before processing
+	StateFile       string // path to persist last processed block
 }
+
+// ── State persistence ─────────────────────────────────────────────────────────
+
+type oracleState struct {
+	LastProcessedBlock uint64 `json:"lastProcessedBlock"`
+}
+
+func loadState(path string) oracleState {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return oracleState{}
+	}
+	var s oracleState
+	if err := json.Unmarshal(data, &s); err != nil {
+		return oracleState{}
+	}
+	return s
+}
+
+func saveState(path string, s oracleState) {
+	data, err := json.Marshal(s)
+	if err != nil {
+		fmt.Println("Oracle: failed to marshal state:", err)
+		return
+	}
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		fmt.Println("Oracle: failed to save state:", err)
+	}
+}
+
+// ── Oracle ────────────────────────────────────────────────────────────────────
 
 // Oracle watches for EncodeRequested events and fulfills them.
 type Oracle struct {
@@ -34,7 +72,6 @@ type Oracle struct {
 	client   *ethclient.Client
 	instance *bindingsepolia.HealChainStorage
 	privKey  *ecdsa.PrivateKey
-	auth     *bind.TransactOpts
 }
 
 // NewOracle creates and connects an Oracle instance.
@@ -55,23 +92,20 @@ func NewOracle(cfg OracleConfig) (*Oracle, error) {
 		return nil, fmt.Errorf("oracle: invalid private key: %w", err)
 	}
 
-	auth, err := bind.NewKeyedTransactorWithChainID(privKey, big.NewInt(cfg.ChainID))
-	if err != nil {
-		return nil, fmt.Errorf("oracle: failed to create transactor: %w", err)
-	}
-	auth.GasLimit = 500_000
+	oracleAddr := crypto.PubkeyToAddress(privKey.PublicKey)
 
 	fmt.Printf("🔮 Oracle initialized\n")
 	fmt.Printf("   Contract: %s\n", cfg.ContractAddress)
-	fmt.Printf("   Oracle:   %s\n", crypto.PubkeyToAddress(privKey.PublicKey).Hex())
+	fmt.Printf("   Oracle:   %s\n", oracleAddr.Hex())
 	fmt.Printf("   Chain ID: %d\n", cfg.ChainID)
+	fmt.Printf("   Confirmations required: %d\n", cfg.Confirmations)
+	fmt.Printf("   State file: %s\n", cfg.StateFile)
 
 	return &Oracle{
 		cfg:      cfg,
 		client:   client,
 		instance: instance,
 		privKey:  privKey,
-		auth:     auth,
 	}, nil
 }
 
@@ -79,11 +113,23 @@ func NewOracle(cfg OracleConfig) (*Oracle, error) {
 func (o *Oracle) Start(ctx context.Context) {
 	fmt.Printf("🔮 Oracle started — polling every %s\n", o.cfg.PollInterval)
 
-	// Track last processed block to avoid reprocessing
-	lastBlock, err := o.client.BlockNumber(ctx)
-	if err != nil {
-		fmt.Println("Oracle: failed to get block number:", err)
-		lastBlock = 0
+	// Load persisted state — resume from last processed block
+	state := loadState(o.cfg.StateFile)
+
+	// If no saved state, start from current block minus a small buffer
+	if state.LastProcessedBlock == 0 {
+		current, err := o.client.BlockNumber(ctx)
+		if err != nil {
+			fmt.Println("Oracle: failed to get initial block:", err)
+		} else {
+			// Start from 100 blocks back to catch any missed events
+			if current > 100 {
+				state.LastProcessedBlock = current - 100
+			}
+		}
+		fmt.Printf("🔮 No saved state — starting from block %d\n", state.LastProcessedBlock)
+	} else {
+		fmt.Printf("🔮 Resuming from saved block %d\n", state.LastProcessedBlock)
 	}
 
 	ticker := time.NewTicker(o.cfg.PollInterval)
@@ -92,9 +138,11 @@ func (o *Oracle) Start(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("🔮 Oracle stopped")
+			fmt.Println("🔮 Oracle stopped — saving state")
+			saveState(o.cfg.StateFile, state)
 			o.client.Close()
 			return
+
 		case <-ticker.C:
 			currentBlock, err := o.client.BlockNumber(ctx)
 			if err != nil {
@@ -102,22 +150,36 @@ func (o *Oracle) Start(ctx context.Context) {
 				continue
 			}
 
-			if currentBlock <= lastBlock {
+			// Only process blocks that have enough confirmations
+			if currentBlock < o.cfg.Confirmations {
+				continue
+			}
+			safeBlock := currentBlock - o.cfg.Confirmations
+
+			if safeBlock <= state.LastProcessedBlock {
 				continue
 			}
 
-			// Filter EncodeRequested events from lastBlock+1 to currentBlock
-			fromBlock := lastBlock + 1
+			fromBlock := state.LastProcessedBlock + 1
+			toBlock := safeBlock
+
+			// Cap range to avoid overly large queries
+			if toBlock-fromBlock > 9 {
+				toBlock = fromBlock + 9
+			}
+
+			fmt.Printf("🔮 Scanning blocks %d→%d (confirmed up to %d)\n",
+				fromBlock, toBlock, safeBlock)
+
 			opts := &bind.FilterOpts{
 				Start:   fromBlock,
-				End:     &currentBlock,
+				End:     &toBlock,
 				Context: ctx,
 			}
 
 			iter, err := o.instance.FilterEncodeRequested(opts, nil, nil)
 			if err != nil {
 				fmt.Printf("Oracle: filter error: %v\n", err)
-				lastBlock = currentBlock
 				continue
 			}
 
@@ -129,12 +191,14 @@ func (o *Oracle) Start(ctx context.Context) {
 					len(event.Data),
 					event.Label,
 				)
-
-				go o.handleEncodeRequest(ctx, event)
+				// Process synchronously to avoid race conditions on nonce
+				o.handleEncodeRequest(ctx, event)
 			}
 			iter.Close()
 
-			lastBlock = currentBlock
+			// Save progress
+			state.LastProcessedBlock = toBlock
+			saveState(o.cfg.StateFile, state)
 		}
 	}
 }
@@ -145,6 +209,17 @@ func (o *Oracle) handleEncodeRequest(ctx context.Context, event *bindingsepolia.
 	data := event.Data
 	dataShards := int(event.DataShards)
 	parityShards := int(event.ParityShards)
+
+	// ── Duplicate protection: check isPending before doing any work ───────────
+	isPending, err := o.instance.IsPending(nil, requestId)
+	if err != nil {
+		fmt.Printf("Oracle: isPending check failed for requestId=%s: %v\n", requestId, err)
+		return
+	}
+	if !isPending {
+		fmt.Printf("Oracle: requestId=%s already fulfilled or does not exist — skipping\n", requestId)
+		return
+	}
 
 	fmt.Printf("🔮 Processing requestId=%s (%d bytes, shards %d+%d)\n",
 		requestId.String(), len(data), dataShards, parityShards)
@@ -165,35 +240,37 @@ func (o *Oracle) handleEncodeRequest(ctx context.Context, event *bindingsepolia.
 	fmt.Printf("🔮 Encoded requestId=%s: %d → %d bytes\n",
 		requestId.String(), len(data), len(encoded))
 
-	// ── Call fulfillStore on the contract ─────────────────────────────────────
+	// ── Call fulfillStore with retries ────────────────────────────────────────
 	var tx *types.Transaction
+	var txErr error
+
 	for attempt := 1; attempt <= 3; attempt++ {
-		// Refresh nonce each attempt
-		auth, err := bind.NewKeyedTransactorWithChainID(o.privKey, big.NewInt(o.cfg.ChainID))
-		if err != nil {
-			fmt.Printf("Oracle: transactor error attempt %d: %v\n", attempt, err)
+		// Fresh transactor each attempt — picks up latest nonce
+		auth, err2 := bind.NewKeyedTransactorWithChainID(o.privKey, big.NewInt(o.cfg.ChainID))
+		if err2 != nil {
+			fmt.Printf("Oracle: transactor error attempt %d: %v\n", attempt, err2)
 			time.Sleep(time.Duration(attempt) * 2 * time.Second)
 			continue
 		}
 		auth.GasLimit = 3_000_000
 
-		tx, err = o.instance.FulfillStore(auth, requestId, encoded)
-		if err == nil {
+		tx, txErr = o.instance.FulfillStore(auth, requestId, encoded)
+		if txErr == nil && tx != nil {
 			break
 		}
-		fmt.Printf("Oracle: fulfillStore attempt %d failed: %v\n", attempt, err)
+		fmt.Printf("Oracle: fulfillStore attempt %d failed: %v\n", attempt, txErr)
 		time.Sleep(time.Duration(attempt) * 2 * time.Second)
 	}
 
-	if err != nil || tx == nil {
-		fmt.Printf("Oracle: fulfillStore failed after retries for requestId=%s: %v\n", requestId, err)
+	if txErr != nil || tx == nil {
+		fmt.Printf("Oracle: fulfillStore failed after retries for requestId=%s: %v\n", requestId, txErr)
 		return
 	}
 
 	fmt.Printf("🔮 fulfillStore submitted: requestId=%s tx=%s\n",
 		requestId.String(), tx.Hash().Hex())
 
-	// Wait for confirmation
+	// ── Wait for confirmation ─────────────────────────────────────────────────
 	receipt, err := bind.WaitMined(ctx, o.client, tx)
 	if err != nil {
 		fmt.Printf("Oracle: WaitMined failed for requestId=%s: %v\n", requestId, err)
@@ -209,17 +286,19 @@ func (o *Oracle) handleEncodeRequest(ctx context.Context, event *bindingsepolia.
 		requestId.String(), receipt.BlockNumber.Uint64(), tx.Hash().Hex())
 }
 
-// sepoliaStoreOnChain sends a store request to the Sepolia contract and waits
-// for the oracle to fulfill it. Returns the record ID once fulfilled.
+// ── Sepolia store helper ──────────────────────────────────────────────────────
+
+// sepoliaStoreOnChain sends a store request to the Sepolia contract.
+// Returns the tx hash and requestId. The oracle fulfills async.
 func sepoliaStoreOnChain(
 	data []byte,
-	dataShards, parityShards uint8,
 	label string,
 ) (txHash string, requestID string, err error) {
 
 	sepoliaURL := getEnv("SEPOLIA_RPC_URL", "")
 	contractAddr := getEnv("SEPOLIA_CONTRACT_ADDRESS", "")
-	privKeyHex := getEnv("STORE_PRIVATE_KEY", "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	privKeyHex := getEnv("ORACLE_PRIVATE_KEY", getEnv("STORE_PRIVATE_KEY",
+		"b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291"))
 
 	if sepoliaURL == "" || contractAddr == "" {
 		return "", "", fmt.Errorf("SEPOLIA_RPC_URL and SEPOLIA_CONTRACT_ADDRESS must be set")
@@ -276,14 +355,13 @@ func sepoliaStoreOnChain(
 		return tx.Hash().Hex(), "", fmt.Errorf("could not parse requestId from event")
 	}
 
-	_ = hex.EncodeToString // suppress unused import
 	fmt.Printf("Store submitted to Sepolia: tx=%s requestId=%s\n",
 		tx.Hash().Hex(), reqID.String())
 
 	return tx.Hash().Hex(), reqID.String(), nil
 }
 
-// filterLogs is a helper for manual log filtering (used in polling).
+// filterLogs is a helper for manual log filtering.
 func filterLogs(client *ethclient.Client, ctx context.Context,
 	contractAddr common.Address, fromBlock, toBlock uint64,
 	topic common.Hash) ([]types.Log, error) {
@@ -296,3 +374,7 @@ func filterLogs(client *ethclient.Client, ctx context.Context,
 	}
 	return client.FilterLogs(ctx, query)
 }
+
+// suppress unused import
+var _ = hex.EncodeToString
+var _ = filepath.Join
