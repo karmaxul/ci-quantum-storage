@@ -33,6 +33,7 @@ var (
 	storePrivateKey = getEnv("STORE_PRIVATE_KEY", "b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	gethURL         = getEnv("GETH_URL", "http://localhost:8545")
 	listenAddr      = getEnv("LISTEN_ADDR", ":8080")
+	apiKeys         = getEnv("API_KEYS", "") // comma-separated, empty = disabled
 )
 
 func getEnv(key, fallback string) string {
@@ -115,6 +116,44 @@ func withCORS(h http.Handler) http.Handler {
 	})
 }
 
+// ── API key middleware ────────────────────────────────────────────────────────
+
+func withAuth(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// If no API keys configured, auth is disabled
+		if apiKeys == "" {
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		// Health and stats are always public
+		if r.URL.Path == "/health" || r.URL.Path == "/stats" {
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		key := r.Header.Get("X-API-Key")
+		if key == "" {
+			// Also accept as query param for convenience
+			key = r.URL.Query().Get("api_key")
+		}
+
+		if key == "" {
+			jsonErr(w, http.StatusUnauthorized, "missing API key — provide X-API-Key header")
+			return
+		}
+
+		for _, valid := range strings.Split(apiKeys, ",") {
+			if strings.TrimSpace(valid) == key {
+				h.ServeHTTP(w, r)
+				return
+			}
+		}
+
+		jsonErr(w, http.StatusForbidden, "invalid API key")
+	})
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 func main() {
@@ -144,7 +183,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    listenAddr,
-		Handler: withCORS(mux),
+		Handler: withCORS(withAuth(mux)),
 	}
 
 	// Graceful shutdown on SIGTERM / SIGINT
