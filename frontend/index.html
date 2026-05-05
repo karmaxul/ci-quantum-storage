@@ -331,7 +331,10 @@
         <span id="records-status" style="display:none"></span>
       </div>
     </div>
-    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀ Light Mode</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="theme-toggle" id="networkBtn" onclick="switchNetwork()">🌐 Sepolia</button>
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀ Light Mode</button>
+    </div>
   </header>
 
   <!-- Store -->
@@ -416,8 +419,29 @@
 <div id="toast"></div>
 
 <script>
-  const SVC = "http://localhost:8080";
-  const EXPLORER_BASE = "https://sepolia.etherscan.io/tx"; // update for testnet
+// ── Network config ────────────────────────────────────────────────────────
+  const NETWORKS = {
+    devnet: {
+      name:        "Devnet",
+      svc:         "http://localhost:8080",
+      explorer:    null,
+      contract:    "0x— local —",
+      chainId:     "1337",
+    },
+    sepolia: {
+      name:        "Sepolia",
+      svc:         "http://localhost:8080",
+      explorer:    "https://sepolia.etherscan.io/tx",
+      contract:    "0xBffb39930647DBB5971690ea6e9F0CF393307e64",
+      chainId:     "11155111",
+    }
+  };
+
+  let currentNetwork = localStorage.getItem("network") || "devnet";
+
+  function getNet() { return NETWORKS[currentNetwork]; }
+  const SVC = () => getNet().svc;
+  const EXPLORER_BASE = () => getNet().explorer;
 
   // ── State ─────────────────────────────────────────────────────────────────
   let currentPage  = 0;
@@ -537,7 +561,7 @@ function fallbackCopy(text, btn) {
 
   async function checkStatus() {
     try {
-      const res  = await fetch(`${SVC}/health`);
+      const res  = await fetch(`${SVC()}/health`);
       const json = await res.json();
 
       document.getElementById("svc-status").innerHTML =
@@ -549,7 +573,7 @@ function fallbackCopy(text, btn) {
           : `<span class="status-dot err"></span>Geth: unreachable`;
 
       // Fetch total from stats
-      const sr = await fetch(`${SVC}/stats`);
+      const sr = await fetch(`${SVC()}/stats`);
       const sj = await sr.json();
       const rs = document.getElementById("records-status");
       rs.style.display = "inline";
@@ -572,7 +596,7 @@ function fallbackCopy(text, btn) {
     setResult("storeResult", "Sending to service...", "");
 
     try {
-      const res  = await fetch(`${SVC}/storeOnChain`, {
+      const res  = await fetch(`${SVC()}/storeOnChain`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data: strToHex(raw), label })
@@ -585,8 +609,11 @@ function fallbackCopy(text, btn) {
         return;
       }
 
-      const txLink = `<a href="${EXPLORER_BASE}/${json.tx}" target="_blank" rel="noopener">${escapeHtml(json.tx)}</a>`;
-      const retUrl = `${SVC}/retrieve?id=${json.recordId}`;
+      const explorer = EXPLORER_BASE();
+      const txLink = explorer
+        ? `<a href="${explorer}/${json.tx}" target="_blank" rel="noopener">${escapeHtml(json.tx)}</a>`
+        : escapeHtml(json.tx);
+      const retUrl = `${SVC()}/retrieve?id=${json.recordId}`;
 
       setResult("storeResult",
         `✅ Stored successfully!\n` +
@@ -622,7 +649,7 @@ function fallbackCopy(text, btn) {
     setResult("retrieveResult", "Fetching from chain...", "");
 
     try {
-      const res  = await fetch(`${SVC}/retrieve?id=${encodeURIComponent(idVal)}`);
+      const res  = await fetch(`${SVC()}/retrieve?id=${encodeURIComponent(idVal)}`);
       const json = await res.json();
 
       if (!res.ok) {
@@ -655,7 +682,7 @@ function fallbackCopy(text, btn) {
     setResult("metadataResult", "Fetching metadata...", "");
 
     try {
-      const res  = await fetch(`${SVC}/getMetadata?id=${encodeURIComponent(idVal)}`);
+      const res  = await fetch(`${SVC()}/getMetadata?id=${encodeURIComponent(idVal)}`);
       const json = await res.json();
 
       if (!res.ok) {
@@ -690,7 +717,7 @@ function fallbackCopy(text, btn) {
     if (!confirm(`Delete record ${id}? This cannot be undone.`)) return;
     toast(`Deleting record ${id}...`);
     try {
-      const res  = await fetch(`${SVC}/delete?id=${id}`);
+      const res  = await fetch(`${SVC()}/delete?id=${id}`);
       const json = await res.json();
       if (!res.ok) { toast(`Delete failed: ${json.error}`, "err"); return; }
       toast(`✅ Record ${id} deleted`, "ok");
@@ -699,6 +726,34 @@ function fallbackCopy(text, btn) {
     } catch (err) {
       toast("Network error: " + err.message, "err");
     }
+  }
+
+// ── Network switcher ──────────────────────────────────────────────────────
+
+  function switchNetwork() {
+    currentNetwork = currentNetwork === "devnet" ? "sepolia" : "devnet";
+    localStorage.setItem("network", currentNetwork);
+    updateNetworkUI();
+    checkStatus();
+    loadRecords(0);
+  }
+
+  function updateNetworkUI() {
+    const net = getNet();
+    const btn = document.getElementById("networkBtn");
+    btn.textContent = currentNetwork === "devnet"
+      ? "🌐 Switch to Sepolia"
+      : "🏠 Switch to Devnet";
+    btn.style.borderColor = currentNetwork === "sepolia" ? "var(--accent2)" : "";
+    btn.style.color       = currentNetwork === "sepolia" ? "var(--accent2)" : "";
+
+    // Update status bar
+    document.getElementById("svc-status").innerHTML =
+      `<span class="status-dot"></span>${net.name} · chain ${net.chainId}`;
+  }
+
+  function initNetwork() {
+    updateNetworkUI();
   }
 
   // ── Records with pagination ────────────────────────────────────────────────
@@ -716,7 +771,7 @@ function fallbackCopy(text, btn) {
     pag.style.display = "none";
 
     try {
-      const res  = await fetch(`${SVC}/listRecords?page=${page}&limit=${limit}`);
+      const res  = await fetch(`${SVC()}/listRecords?page=${page}&limit=${limit}`);
       const json = await res.json();
 
       if (!res.ok) {
@@ -819,8 +874,9 @@ function fallbackCopy(text, btn) {
 
   // ── Init ───────────────────────────────────────────────────────────────────
 
-  window.onload = () => {
+window.onload = () => {
     initTheme();
+    initNetwork();
     checkStatus();
     loadRecords(0);
     setInterval(checkStatus, 15000);
