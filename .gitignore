@@ -53,3 +53,7 @@ foundry/healchain.go
 foundry/script/Counter.s.sol
 foundry/src/Counter.sol
 foundry/test/Counter.t.sol
+foundry-sepolia/README.md
+foundry-sepolia/script/Counter.s.sol
+foundry-sepolia/src/Counter.sol
+foundry-sepolia/test/
