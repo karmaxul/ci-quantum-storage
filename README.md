@@ -58,6 +58,7 @@ HealChain is deployed and operational on Ethereum Sepolia testnet.
 | **Network** | Ethereum Sepolia (Chain ID: 11155111) |
 | **Oracle** | `0x96243925D8588E332d8ff54c71936Ca2dC5f2aE2` |
 | **Explorer** | [View on Etherscan](https://sepolia.etherscan.io/address/0xBffb39930647DBB5971690ea6e9F0CF393307e64) |
+| **Verified Source** | [View Contract Code](https://sepolia.etherscan.io/address/0xBffb39930647DBB5971690ea6e9F0CF393307e64#code) ✅ |
 
 ### Store data on Sepolia
 
