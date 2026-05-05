@@ -30,6 +30,9 @@ services:
       - STORE_PRIVATE_KEY=${STORE_PRIVATE_KEY:-b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291}
       - GETH_URL=http://geth:8545
       - LISTEN_ADDR=:8080
+      - SEPOLIA_RPC_URL=${SEPOLIA_RPC_URL:-}
+      - SEPOLIA_CONTRACT_ADDRESS=${SEPOLIA_CONTRACT_ADDRESS:-}
+      - ORACLE_PRIVATE_KEY=${ORACLE_PRIVATE_KEY:-}
     depends_on:
       geth:
         condition: service_healthy

@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-    "strconv"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -142,10 +142,10 @@ func main() {
 		w.Write([]byte("Nuclear test successful"))
 	})
 
-srv := &http.Server{
-    Addr:    listenAddr,
-    Handler: withCORS(mux),
-}
+	srv := &http.Server{
+		Addr:    listenAddr,
+		Handler: withCORS(mux),
+	}
 
 	// Graceful shutdown on SIGTERM / SIGINT
 	go func() {
@@ -164,6 +164,30 @@ srv := &http.Server{
 	fmt.Printf("   Geth:      %s\n", gethURL)
 	fmt.Printf("   Listening: %s\n", listenAddr)
 	fmt.Println("Listening...")
+
+	// ── Start Sepolia oracle if configured ───────────────────────────────────
+	sepoliaRPC := getEnv("SEPOLIA_RPC_URL", "")
+	sepoliaContract := getEnv("SEPOLIA_CONTRACT_ADDRESS", "")
+
+	if sepoliaRPC != "" && sepoliaContract != "" {
+		oracleCfg := OracleConfig{
+			SepoliaRPC:      sepoliaRPC,
+			ContractAddress: sepoliaContract,
+			PrivateKey:      getEnv("ORACLE_PRIVATE_KEY", storePrivateKey),
+			ChainID:         11155111,
+			PollInterval:    15 * time.Second,
+		}
+		oracle, err := NewOracle(oracleCfg)
+		if err != nil {
+			fmt.Println("Oracle init failed:", err)
+		} else {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			go oracle.Start(ctx)
+		}
+	} else {
+		fmt.Println("ℹ️  SEPOLIA_RPC_URL not set — oracle watcher disabled")
+	}
 
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		fmt.Println("ListenAndServe error:", err)
@@ -191,12 +215,12 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonOK(w, map[string]interface{}{
-		"status":   "healthy",
-		"version":  "2.4",
-		"geth":     gethStatus,
-		"chainId":  chainID,
+		"status":    "healthy",
+		"version":   "2.4",
+		"geth":      gethStatus,
+		"chainId":   chainID,
 		"lastBlock": lastBlock,
-		"contract": contractAddress,
+		"contract":  contractAddress,
 	})
 }
 
@@ -334,7 +358,7 @@ func handleStore(w http.ResponseWriter, r *http.Request) {
 	if req.ParityShards == 0 {
 		req.ParityShards = 4
 	}
-    if err := validateInput(data, req.Label); err != nil {
+	if err := validateInput(data, req.Label); err != nil {
 		jsonErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -378,7 +402,7 @@ func handleStoreOnChain(w http.ResponseWriter, r *http.Request) {
 	if req.ParityShards == 0 {
 		req.ParityShards = 4
 	}
-    if err := validateInput(data, req.Label); err != nil {
+	if err := validateInput(data, req.Label); err != nil {
 		jsonErr(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -599,7 +623,7 @@ func handleListRecords(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("=== LIST RECORDS ===")
 
 	// Parse pagination params
-	pageStr  := r.URL.Query().Get("page")
+	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
 
 	page := 0
@@ -727,7 +751,7 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 		jsonErr(w, http.StatusInternalServerError, "failed to create transactor: "+err.Error())
 		return
 	}
-auth.GasLimit = 1_000_000
+	auth.GasLimit = 1_000_000
 
 	tx, err := instance.Remove(auth, id)
 	if err != nil {
