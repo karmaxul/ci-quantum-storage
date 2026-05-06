@@ -651,6 +651,83 @@
     #toast.ok  { border-color: var(--success); }
     #toast.err { border-color: var(--error); }
 
+    /* ── Oracle monitoring ── */
+    .health-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+      align-items: center;
+    }
+    .health-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text);
+      letter-spacing: 0.4px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .health-pill.ok   { border-color: var(--success); color: var(--success); }
+    .health-pill.warn { border-color: var(--warn);    color: var(--warn); }
+    .health-pill.err  { border-color: var(--error);   color: var(--error); }
+    .health-pill .dot { width: 7px; height: 7px; }
+    .health-reason {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted2);
+      flex: 1;
+      min-width: 0;
+    }
+    .health-reason.err { color: var(--error); }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .metric-tile {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      transition: border-color 0.2s;
+      min-width: 0;
+    }
+    .metric-tile:hover { border-color: var(--border2); }
+    .metric-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+    .metric-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.15;
+      word-break: break-all;
+    }
+    .metric-value.accent  { color: var(--accent); }
+    .metric-value.success { color: var(--success); }
+    .metric-value.error   { color: var(--error); }
+    .metric-value.warn    { color: var(--warn); }
+    .metric-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted2);
+    }
+
     /* Responsive */
     @media (max-width: 600px) {
       body { padding: 20px 14px 40px; }
@@ -658,6 +735,7 @@
       .shard-row { flex-direction: column; }
       .inline-row { flex-direction: column; }
       .inline-row button { width: 100%; }
+      .metric-value { font-size: 16px; }
     }
   </style>
 </head>
@@ -697,6 +775,55 @@
       <button class="ctrl-btn" id="precompileToggle" onclick="togglePrecompile()" style="display:none">⚙ Precompile</button>
     </div>
   </header>
+
+  <!-- ── Oracle Monitoring (Sepolia only) ── -->
+  <div class="card" id="metricsCard" style="display:none">
+    <div class="card-header">
+      <div class="card-title">// Oracle Monitoring</div>
+      <span class="field-hint" id="metricsLastUpdate">never</span>
+    </div>
+
+    <div class="health-row">
+      <div class="health-pill" id="oracleHealthPill">
+        <span class="dot pulse" id="oracleHealthDot"></span>
+        <span id="oracleHealthLabel">checking…</span>
+      </div>
+      <div class="health-reason" id="oracleHealthReason"></div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-tile">
+        <span class="metric-label">Fulfilled</span>
+        <span class="metric-value success" id="mFulfilled">—</span>
+        <span class="metric-sub" id="mFulfilledSub"></span>
+      </div>
+      <div class="metric-tile">
+        <span class="metric-label">Success Rate</span>
+        <span class="metric-value accent" id="mSuccessRate">—</span>
+        <span class="metric-sub" id="mSuccessRateSub"></span>
+      </div>
+      <div class="metric-tile">
+        <span class="metric-label">In Flight</span>
+        <span class="metric-value" id="mInFlight">—</span>
+        <span class="metric-sub" id="mInFlightSub"></span>
+      </div>
+      <div class="metric-tile">
+        <span class="metric-label">Gas Spent</span>
+        <span class="metric-value accent" id="mGas">—</span>
+        <span class="metric-sub" id="mGasSub"></span>
+      </div>
+      <div class="metric-tile">
+        <span class="metric-label">Last Scan</span>
+        <span class="metric-value" id="mLastScan">—</span>
+        <span class="metric-sub" id="mLastScanSub"></span>
+      </div>
+      <div class="metric-tile">
+        <span class="metric-label">Block</span>
+        <span class="metric-value" id="mBlock">—</span>
+        <span class="metric-sub" id="mBlockSub"></span>
+      </div>
+    </div>
+  </div>
 
   <!-- ── Store ── -->
   <div class="card">
@@ -982,6 +1109,14 @@
     preToggle.style.display = isSepolia ? "none" : "inline-block";
     if (isSepolia) {
       document.getElementById("precompileSection").classList.remove("visible");
+    }
+
+    // Show oracle monitoring card only on Sepolia
+    const metricsCard = document.getElementById("metricsCard");
+    if (metricsCard) {
+      metricsCard.style.display = isSepolia ? "block" : "none";
+      if (isSepolia) startMetricsPolling();
+      else stopMetricsPolling();
     }
   }
 
@@ -1575,6 +1710,111 @@
     } finally {
       setLoading("decodeBtn", false, "Run Decode Precompile");
     }
+  }
+
+  // ── Oracle monitoring ─────────────────────────────────────────────────────
+
+  let metricsTimer = null;
+
+  function relTime(seconds) {
+    if (seconds == null || isNaN(seconds)) return "—";
+    if (seconds < 0) seconds = 0;
+    if (seconds < 60)    return Math.floor(seconds) + "s ago";
+    if (seconds < 3600)  return Math.floor(seconds / 60) + "m ago";
+    if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
+    return Math.floor(seconds / 86400) + "d ago";
+  }
+
+  async function refreshMetrics() {
+    if (currentNetwork !== "sepolia") return;
+    try {
+      const res = await fetch(`${SVC()}/metrics`, { cache: "no-store" });
+      if (!res.ok) return;
+      const json = await res.json();
+      renderMetrics(json);
+    } catch {
+      // Network blip — keep prior values, do not flicker the card.
+    }
+  }
+
+  function renderMetrics(j) {
+    const oracle = j.oracle || {};
+
+    const pill   = document.getElementById("oracleHealthPill");
+    const dot    = document.getElementById("oracleHealthDot");
+    const label  = document.getElementById("oracleHealthLabel");
+    const reason = document.getElementById("oracleHealthReason");
+
+    if (!oracle.enabled) {
+      pill.className    = "health-pill err";
+      dot.className     = "dot err";
+      label.textContent = "Disabled";
+      reason.textContent = oracle.healthReason || "Oracle not configured";
+      reason.className   = "health-reason err";
+    } else if (oracle.healthy) {
+      pill.className    = "health-pill ok";
+      dot.className     = "dot pulse";
+      label.textContent = "Healthy";
+      reason.textContent = "";
+      reason.className   = "health-reason";
+    } else {
+      pill.className    = "health-pill warn";
+      dot.className     = "dot warn";
+      label.textContent = "Degraded";
+      reason.textContent = oracle.healthReason || "";
+      reason.className   = "health-reason";
+    }
+
+    const succ = oracle.fulfillmentsSucceeded || 0;
+    const fail = oracle.fulfillmentsFailed    || 0;
+    const skip = oracle.fulfillmentsSkipped   || 0;
+    const seen = oracle.requestsObserved      || 0;
+    const finalized = succ + fail;
+
+    document.getElementById("mFulfilled").textContent    = succ.toLocaleString();
+    document.getElementById("mFulfilledSub").textContent =
+      (fail > 0 ? `${fail} failed · ` : "") +
+      (skip > 0 ? `${skip} skipped · ` : "") +
+      `${seen} seen`;
+
+    document.getElementById("mSuccessRate").textContent =
+      finalized > 0 ? Math.round((oracle.successRate || 0) * 100) + "%" : "—";
+    document.getElementById("mSuccessRateSub").textContent =
+      finalized > 0 ? `${succ}/${finalized} fulfilled` : "no requests yet";
+
+    const inflight = oracle.inFlight || 0;
+    const inflightEl = document.getElementById("mInFlight");
+    inflightEl.textContent = String(inflight);
+    inflightEl.className   = "metric-value" + (inflight > 0 ? " warn" : "");
+    document.getElementById("mInFlightSub").textContent =
+      inflight > 0 ? "processing…" : "idle";
+
+    document.getElementById("mGas").textContent    = (oracle.gasSpentEth || "0.000000") + " ETH";
+    document.getElementById("mGasSub").textContent =
+      (oracle.gasUsedTotal != null ? Number(oracle.gasUsedTotal).toLocaleString() : "0") + " gas units";
+
+    document.getElementById("mLastScan").textContent    = relTime(oracle.secondsSinceLastScan);
+    document.getElementById("mLastScanSub").textContent =
+      oracle.pollIntervalSeconds ? `every ${oracle.pollIntervalSeconds}s` : "";
+
+    document.getElementById("mBlock").textContent =
+      oracle.lastProcessedBlock ? Number(oracle.lastProcessedBlock).toLocaleString() : "—";
+    document.getElementById("mBlockSub").textContent =
+      oracle.blocksBehind ? `${oracle.blocksBehind} behind chain` :
+      (oracle.currentBlock ? "synced" : "");
+
+    document.getElementById("metricsLastUpdate").textContent =
+      "updated " + new Date().toLocaleTimeString();
+  }
+
+  function startMetricsPolling() {
+    if (metricsTimer) clearInterval(metricsTimer);
+    refreshMetrics();
+    metricsTimer = setInterval(refreshMetrics, 10000);
+  }
+
+  function stopMetricsPolling() {
+    if (metricsTimer) { clearInterval(metricsTimer); metricsTimer = null; }
   }
 
   // ── Init ──────────────────────────────────────────────────────────────────

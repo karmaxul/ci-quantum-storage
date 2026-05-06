@@ -37,7 +37,13 @@ var (
 	gethURL         = getEnv("GETH_URL", "http://localhost:8545")
 	listenAddr      = getEnv("LISTEN_ADDR", ":8080")
 	apiKeys         = getEnv("API_KEYS", "") // comma-separated, empty = disabled
+
+	// Set in main() once if Sepolia config is present. Read by /metrics.
+	sepoliaOracle    *Oracle
+	serviceStartedAt = time.Now()
 )
+
+const serviceVersion = "2.4"
 
 func getEnv(key, fallback string) string {
 	if val := os.Getenv(key); val != "" {
@@ -156,8 +162,8 @@ func withAuth(h http.Handler) http.Handler {
 			return
 		}
 
-		// Health and stats are always public
-		if r.URL.Path == "/health" || r.URL.Path == "/stats" {
+		// Health, stats, and metrics are always public
+		if r.URL.Path == "/health" || r.URL.Path == "/stats" || r.URL.Path == "/metrics" {
 			h.ServeHTTP(w, r)
 			return
 		}
@@ -205,6 +211,7 @@ func main() {
 	// Service info
 	mux.HandleFunc("/health", handleHealth)
 	mux.HandleFunc("/stats", handleStats)
+	mux.HandleFunc("/metrics", handleMetrics)
 
 	mux.HandleFunc("/nuclear-test", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("=== NUCLEAR TEST ROUTE HIT ===")
@@ -228,8 +235,8 @@ func main() {
 		srv.Shutdown(ctx)
 	}()
 
-	fmt.Println("🚀 HealChain Self-Healing Service v2.4")
-	fmt.Println("   Endpoints: /encode /decode /storeOnChain /store /retrieve /getMetadata /listRecords /delete /health /stats")
+	fmt.Println("🚀 HealChain Self-Healing Service v" + serviceVersion)
+	fmt.Println("   Endpoints: /encode /decode /storeOnChain /store /retrieve /getMetadata /listRecords /delete /health /stats /metrics")
 	fmt.Printf("   Contract:  %s\n", contractAddress)
 	fmt.Printf("   Geth:      %s\n", gethURL)
 	fmt.Printf("   Listening: %s\n", listenAddr)
@@ -254,6 +261,7 @@ func main() {
 		if err != nil {
 			fmt.Println("Oracle init failed:", err)
 		} else {
+			sepoliaOracle = oracle
 			oracleCtx, oracleCancel := context.WithCancel(context.Background())
 			defer oracleCancel()
 			go oracle.Start(oracleCtx)
@@ -886,6 +894,75 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 		"recordId": idStr,
 		"tx":       tx.Hash().Hex(),
 	})
+}
+
+// ── handleMetrics ─────────────────────────────────────────────────────────────
+
+func handleMetrics(w http.ResponseWriter, r *http.Request) {
+	uptime := int64(time.Since(serviceStartedAt).Seconds())
+
+	// Geth (devnet) reachability — best-effort, non-blocking on errors
+	gethStatus := "ok"
+	gethBlock := uint64(0)
+	gethChainID := ""
+	if client, err := gethClient(); err != nil {
+		gethStatus = "unreachable"
+	} else {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		if block, err := client.BlockByNumber(ctx, nil); err == nil {
+			gethBlock = block.NumberU64()
+		} else {
+			gethStatus = "error"
+		}
+		if id, err := client.ChainID(ctx); err == nil {
+			gethChainID = id.String()
+		}
+		client.Close()
+	}
+
+	// Devnet contract record count — best-effort
+	totalRecords := ""
+	if client, err := gethClient(); err == nil {
+		instance, err2 := binding.NewHealChainStorage(common.HexToAddress(contractAddress), client)
+		if err2 == nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			if t, err3 := instance.TotalRecords(&bind.CallOpts{Context: ctx}); err3 == nil {
+				totalRecords = t.String()
+			}
+		}
+		client.Close()
+	}
+
+	resp := map[string]interface{}{
+		"service": map[string]interface{}{
+			"version":       serviceVersion,
+			"uptimeSeconds": uptime,
+			"startedAt":     serviceStartedAt.UTC().Format(time.RFC3339),
+			"listenAddr":    listenAddr,
+		},
+		"devnet": map[string]interface{}{
+			"gethUrl":      gethURL,
+			"gethStatus":   gethStatus,
+			"chainId":      gethChainID,
+			"latestBlock":  gethBlock,
+			"contract":     contractAddress,
+			"totalRecords": totalRecords,
+		},
+	}
+
+	if sepoliaOracle != nil {
+		resp["oracle"] = sepoliaOracle.Metrics()
+	} else {
+		resp["oracle"] = map[string]interface{}{
+			"enabled":      false,
+			"healthy":      false,
+			"healthReason": "SEPOLIA_RPC_URL or SEPOLIA_CONTRACT_ADDRESS not configured",
+		}
+	}
+
+	jsonOK(w, resp)
 }
 
 // ── handleSepoliaStatus ───────────────────────────────────────────────────────

@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum"
@@ -38,7 +39,13 @@ type OracleConfig struct {
 // ── State persistence ─────────────────────────────────────────────────────────
 
 type oracleState struct {
-	LastProcessedBlock uint64 `json:"lastProcessedBlock"`
+	LastProcessedBlock    uint64 `json:"lastProcessedBlock"`
+	RequestsObserved      uint64 `json:"requestsObserved,omitempty"`
+	FulfillmentsSucceeded uint64 `json:"fulfillmentsSucceeded,omitempty"`
+	FulfillmentsFailed    uint64 `json:"fulfillmentsFailed,omitempty"`
+	FulfillmentsSkipped   uint64 `json:"fulfillmentsSkipped,omitempty"`
+	GasUsedTotal          uint64 `json:"gasUsedTotal,omitempty"`
+	GasSpentWei           string `json:"gasSpentWei,omitempty"` // big.Int as decimal string
 }
 
 func loadState(path string) oracleState {
@@ -72,6 +79,61 @@ type Oracle struct {
 	client   *ethclient.Client
 	instance *bindingsepolia.HealChainStorage
 	privKey  *ecdsa.PrivateKey
+
+	mu      sync.Mutex
+	metrics oracleMetricsState
+}
+
+// oracleMetricsState is the live in-memory metrics. All access must hold mu.
+type oracleMetricsState struct {
+	StartedAt             time.Time
+	LastScanAt            time.Time
+	LastFulfillmentAt     time.Time
+	LastErrorAt           time.Time
+	CurrentBlock          uint64
+	LastProcessedBlock    uint64
+	RequestsObserved      uint64
+	FulfillmentsSucceeded uint64
+	FulfillmentsFailed    uint64
+	FulfillmentsSkipped   uint64
+	InFlight              uint64
+	GasUsedTotal          uint64
+	GasSpentWei           *big.Int
+	LastTxHash            string
+	LastError             string
+	OracleAddress         string
+}
+
+// OracleMetrics is the JSON-friendly snapshot returned by Oracle.Metrics().
+type OracleMetrics struct {
+	Enabled                     bool    `json:"enabled"`
+	OracleAddress               string  `json:"oracleAddress,omitempty"`
+	ContractAddress             string  `json:"contractAddress,omitempty"`
+	ChainID                     int64   `json:"chainId,omitempty"`
+	StartedAt                   string  `json:"startedAt,omitempty"`
+	UptimeSeconds               int64   `json:"uptimeSeconds"`
+	LastScanAt                  string  `json:"lastScanAt,omitempty"`
+	SecondsSinceLastScan        int64   `json:"secondsSinceLastScan"`
+	LastFulfillmentAt           string  `json:"lastFulfillmentAt,omitempty"`
+	SecondsSinceLastFulfillment int64   `json:"secondsSinceLastFulfillment"`
+	PollIntervalSeconds         int64   `json:"pollIntervalSeconds"`
+	CurrentBlock                uint64  `json:"currentBlock"`
+	LastProcessedBlock          uint64  `json:"lastProcessedBlock"`
+	BlocksBehind                uint64  `json:"blocksBehind"`
+	RequestsObserved            uint64  `json:"requestsObserved"`
+	FulfillmentsSucceeded       uint64  `json:"fulfillmentsSucceeded"`
+	FulfillmentsFailed          uint64  `json:"fulfillmentsFailed"`
+	FulfillmentsSkipped         uint64  `json:"fulfillmentsSkipped"`
+	InFlight                    uint64  `json:"inFlight"`
+	SuccessRate                 float64 `json:"successRate"`
+	GasUsedTotal                uint64  `json:"gasUsedTotal"`
+	GasSpentWei                 string  `json:"gasSpentWei"`
+	GasSpentEth                 string  `json:"gasSpentEth"`
+	LastTxHash                  string  `json:"lastTxHash,omitempty"`
+	LastError                   string  `json:"lastError,omitempty"`
+	LastErrorAt                 string  `json:"lastErrorAt,omitempty"`
+	Healthy                     bool    `json:"healthy"`
+	HealthReason                string  `json:"healthReason,omitempty"`
 }
 
 // NewOracle creates and connects an Oracle instance.
@@ -106,6 +168,10 @@ func NewOracle(cfg OracleConfig) (*Oracle, error) {
 		client:   client,
 		instance: instance,
 		privKey:  privKey,
+		metrics: oracleMetricsState{
+			OracleAddress: oracleAddr.Hex(),
+			GasSpentWei:   new(big.Int),
+		},
 	}, nil
 }
 
@@ -115,6 +181,9 @@ func (o *Oracle) Start(ctx context.Context) {
 
 	// Load persisted state — resume from last processed block
 	state := loadState(o.cfg.StateFile)
+
+	// Hydrate in-memory metrics from persisted counters
+	o.hydrateMetrics(state)
 
 	// If no saved state, start from current block minus a small buffer
 	if state.LastProcessedBlock == 0 {
@@ -132,6 +201,8 @@ func (o *Oracle) Start(ctx context.Context) {
 		fmt.Printf("🔮 Resuming from saved block %d\n", state.LastProcessedBlock)
 	}
 
+	o.recordLastProcessedBlock(state.LastProcessedBlock)
+
 	ticker := time.NewTicker(o.cfg.PollInterval)
 	defer ticker.Stop()
 
@@ -139,7 +210,7 @@ func (o *Oracle) Start(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			fmt.Println("🔮 Oracle stopped — saving state")
-			saveState(o.cfg.StateFile, state)
+			saveState(o.cfg.StateFile, o.snapshotState(state.LastProcessedBlock))
 			o.client.Close()
 			return
 
@@ -147,8 +218,11 @@ func (o *Oracle) Start(ctx context.Context) {
 			currentBlock, err := o.client.BlockNumber(ctx)
 			if err != nil {
 				fmt.Println("Oracle: failed to get block number:", err)
+				o.recordError(fmt.Errorf("blockNumber: %w", err))
 				continue
 			}
+
+			o.recordScan(currentBlock)
 
 			// Only process blocks that have enough confirmations
 			if currentBlock < o.cfg.Confirmations {
@@ -180,6 +254,7 @@ func (o *Oracle) Start(ctx context.Context) {
 			iter, err := o.instance.FilterEncodeRequested(opts, nil, nil)
 			if err != nil {
 				fmt.Printf("Oracle: filter error: %v\n", err)
+				o.recordError(fmt.Errorf("filter: %w", err))
 				continue
 			}
 
@@ -191,14 +266,16 @@ func (o *Oracle) Start(ctx context.Context) {
 					len(event.Data),
 					event.Label,
 				)
+				o.recordObserved()
 				// Process synchronously to avoid race conditions on nonce
 				o.handleEncodeRequest(ctx, event)
 			}
 			iter.Close()
 
-			// Save progress
+			// Save progress (block + cumulative counters)
 			state.LastProcessedBlock = toBlock
-			saveState(o.cfg.StateFile, state)
+			o.recordLastProcessedBlock(toBlock)
+			saveState(o.cfg.StateFile, o.snapshotState(toBlock))
 		}
 	}
 }
@@ -210,14 +287,20 @@ func (o *Oracle) handleEncodeRequest(ctx context.Context, event *bindingsepolia.
 	dataShards := int(event.DataShards)
 	parityShards := int(event.ParityShards)
 
+	o.recordInFlight(true)
+	defer o.recordInFlight(false)
+
 	// ── Duplicate protection: check isPending before doing any work ───────────
 	isPending, err := o.instance.IsPending(nil, requestId)
 	if err != nil {
 		fmt.Printf("Oracle: isPending check failed for requestId=%s: %v\n", requestId, err)
+		o.recordError(fmt.Errorf("isPending: %w", err))
+		o.recordFailed()
 		return
 	}
 	if !isPending {
 		fmt.Printf("Oracle: requestId=%s already fulfilled or does not exist — skipping\n", requestId)
+		o.recordSkipped()
 		return
 	}
 
@@ -228,12 +311,16 @@ func (o *Oracle) handleEncodeRequest(ctx context.Context, event *bindingsepolia.
 	rs, err := healchain.New(dataShards, parityShards)
 	if err != nil {
 		fmt.Printf("Oracle: RS init failed for requestId=%s: %v\n", requestId, err)
+		o.recordError(fmt.Errorf("RS init: %w", err))
+		o.recordFailed()
 		return
 	}
 
 	encoded, err := rs.Encode(data)
 	if err != nil {
 		fmt.Printf("Oracle: RS encode failed for requestId=%s: %v\n", requestId, err)
+		o.recordError(fmt.Errorf("RS encode: %w", err))
+		o.recordFailed()
 		return
 	}
 
@@ -264,6 +351,8 @@ func (o *Oracle) handleEncodeRequest(ctx context.Context, event *bindingsepolia.
 
 	if txErr != nil || tx == nil {
 		fmt.Printf("Oracle: fulfillStore failed after retries for requestId=%s: %v\n", requestId, txErr)
+		o.recordError(fmt.Errorf("fulfillStore: %w", txErr))
+		o.recordFailed()
 		return
 	}
 
@@ -274,16 +363,233 @@ func (o *Oracle) handleEncodeRequest(ctx context.Context, event *bindingsepolia.
 	receipt, err := bind.WaitMined(ctx, o.client, tx)
 	if err != nil {
 		fmt.Printf("Oracle: WaitMined failed for requestId=%s: %v\n", requestId, err)
+		o.recordError(fmt.Errorf("WaitMined: %w", err))
+		o.recordFailed()
 		return
 	}
 
 	if receipt.Status == 0 {
 		fmt.Printf("Oracle: fulfillStore reverted for requestId=%s\n", requestId)
+		o.recordError(fmt.Errorf("fulfillStore reverted (requestId=%s)", requestId))
+		// Reverted txs still consume gas — count it
+		o.recordSucceededOrReverted(tx, receipt, false)
 		return
 	}
 
 	fmt.Printf("✅ Oracle fulfilled requestId=%s | block=%d | tx=%s\n",
 		requestId.String(), receipt.BlockNumber.Uint64(), tx.Hash().Hex())
+	o.recordSucceededOrReverted(tx, receipt, true)
+}
+
+// ── Metrics helpers ───────────────────────────────────────────────────────────
+
+func (o *Oracle) hydrateMetrics(state oracleState) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	if o.metrics.GasSpentWei == nil {
+		o.metrics.GasSpentWei = new(big.Int)
+	}
+	o.metrics.StartedAt = time.Now()
+	o.metrics.LastProcessedBlock = state.LastProcessedBlock
+	o.metrics.RequestsObserved = state.RequestsObserved
+	o.metrics.FulfillmentsSucceeded = state.FulfillmentsSucceeded
+	o.metrics.FulfillmentsFailed = state.FulfillmentsFailed
+	o.metrics.FulfillmentsSkipped = state.FulfillmentsSkipped
+	o.metrics.GasUsedTotal = state.GasUsedTotal
+	if state.GasSpentWei != "" {
+		if g, ok := new(big.Int).SetString(state.GasSpentWei, 10); ok {
+			o.metrics.GasSpentWei = g
+		}
+	}
+}
+
+// snapshotState builds a persistable oracleState from current metrics.
+func (o *Oracle) snapshotState(lastProcessedBlock uint64) oracleState {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	gas := "0"
+	if o.metrics.GasSpentWei != nil {
+		gas = o.metrics.GasSpentWei.String()
+	}
+	return oracleState{
+		LastProcessedBlock:    lastProcessedBlock,
+		RequestsObserved:      o.metrics.RequestsObserved,
+		FulfillmentsSucceeded: o.metrics.FulfillmentsSucceeded,
+		FulfillmentsFailed:    o.metrics.FulfillmentsFailed,
+		FulfillmentsSkipped:   o.metrics.FulfillmentsSkipped,
+		GasUsedTotal:          o.metrics.GasUsedTotal,
+		GasSpentWei:           gas,
+	}
+}
+
+func (o *Oracle) recordScan(currentBlock uint64) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.metrics.LastScanAt = time.Now()
+	o.metrics.CurrentBlock = currentBlock
+}
+
+func (o *Oracle) recordLastProcessedBlock(b uint64) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.metrics.LastProcessedBlock = b
+}
+
+func (o *Oracle) recordObserved() {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.metrics.RequestsObserved++
+}
+
+func (o *Oracle) recordInFlight(active bool) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	if active {
+		o.metrics.InFlight = 1
+	} else {
+		o.metrics.InFlight = 0
+	}
+}
+
+func (o *Oracle) recordSkipped() {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.metrics.FulfillmentsSkipped++
+}
+
+func (o *Oracle) recordFailed() {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.metrics.FulfillmentsFailed++
+}
+
+func (o *Oracle) recordError(err error) {
+	if err == nil {
+		return
+	}
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.metrics.LastError = err.Error()
+	o.metrics.LastErrorAt = time.Now()
+}
+
+// recordSucceededOrReverted accounts gas for a mined tx and bumps the
+// success or failure counter depending on whether the receipt status is OK.
+func (o *Oracle) recordSucceededOrReverted(tx *types.Transaction, receipt *types.Receipt, ok bool) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	if o.metrics.GasSpentWei == nil {
+		o.metrics.GasSpentWei = new(big.Int)
+	}
+	if receipt != nil {
+		o.metrics.GasUsedTotal += receipt.GasUsed
+		gasPrice := receipt.EffectiveGasPrice
+		if gasPrice == nil && tx != nil {
+			gasPrice = tx.GasPrice()
+		}
+		if gasPrice != nil {
+			cost := new(big.Int).Mul(
+				new(big.Int).SetUint64(receipt.GasUsed),
+				gasPrice,
+			)
+			o.metrics.GasSpentWei.Add(o.metrics.GasSpentWei, cost)
+		}
+	}
+
+	if tx != nil {
+		o.metrics.LastTxHash = tx.Hash().Hex()
+	}
+
+	if ok {
+		o.metrics.FulfillmentsSucceeded++
+		o.metrics.LastFulfillmentAt = time.Now()
+	} else {
+		o.metrics.FulfillmentsFailed++
+	}
+}
+
+// Metrics returns a JSON-friendly snapshot of the oracle's metrics.
+func (o *Oracle) Metrics() OracleMetrics {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	m := o.metrics
+	now := time.Now()
+
+	var snap OracleMetrics
+	snap.Enabled = true
+	snap.OracleAddress = m.OracleAddress
+	snap.ContractAddress = o.cfg.ContractAddress
+	snap.ChainID = o.cfg.ChainID
+	snap.PollIntervalSeconds = int64(o.cfg.PollInterval / time.Second)
+
+	if !m.StartedAt.IsZero() {
+		snap.StartedAt = m.StartedAt.UTC().Format(time.RFC3339)
+		snap.UptimeSeconds = int64(now.Sub(m.StartedAt).Seconds())
+	}
+	if !m.LastScanAt.IsZero() {
+		snap.LastScanAt = m.LastScanAt.UTC().Format(time.RFC3339)
+		snap.SecondsSinceLastScan = int64(now.Sub(m.LastScanAt).Seconds())
+	}
+	if !m.LastFulfillmentAt.IsZero() {
+		snap.LastFulfillmentAt = m.LastFulfillmentAt.UTC().Format(time.RFC3339)
+		snap.SecondsSinceLastFulfillment = int64(now.Sub(m.LastFulfillmentAt).Seconds())
+	}
+	if !m.LastErrorAt.IsZero() {
+		snap.LastErrorAt = m.LastErrorAt.UTC().Format(time.RFC3339)
+	}
+
+	snap.CurrentBlock = m.CurrentBlock
+	snap.LastProcessedBlock = m.LastProcessedBlock
+	if m.CurrentBlock > m.LastProcessedBlock {
+		snap.BlocksBehind = m.CurrentBlock - m.LastProcessedBlock
+	}
+
+	snap.RequestsObserved = m.RequestsObserved
+	snap.FulfillmentsSucceeded = m.FulfillmentsSucceeded
+	snap.FulfillmentsFailed = m.FulfillmentsFailed
+	snap.FulfillmentsSkipped = m.FulfillmentsSkipped
+	snap.InFlight = m.InFlight
+
+	finalized := m.FulfillmentsSucceeded + m.FulfillmentsFailed
+	if finalized > 0 {
+		snap.SuccessRate = float64(m.FulfillmentsSucceeded) / float64(finalized)
+	}
+
+	snap.GasUsedTotal = m.GasUsedTotal
+	if m.GasSpentWei != nil {
+		snap.GasSpentWei = m.GasSpentWei.String()
+		eth := new(big.Float).Quo(
+			new(big.Float).SetInt(m.GasSpentWei),
+			new(big.Float).SetInt(big.NewInt(1_000_000_000_000_000_000)),
+		)
+		snap.GasSpentEth = eth.Text('f', 6)
+	} else {
+		snap.GasSpentWei = "0"
+		snap.GasSpentEth = "0.000000"
+	}
+
+	snap.LastTxHash = m.LastTxHash
+	snap.LastError = m.LastError
+
+	// Health: scanning recently, no recent error spike
+	snap.Healthy = true
+	switch {
+	case m.LastScanAt.IsZero():
+		snap.Healthy = false
+		snap.HealthReason = "oracle has not completed a scan yet"
+	case now.Sub(m.LastScanAt) > 3*o.cfg.PollInterval:
+		snap.Healthy = false
+		snap.HealthReason = fmt.Sprintf("no successful scan in %ds (poll interval %s)",
+			int(now.Sub(m.LastScanAt).Seconds()), o.cfg.PollInterval)
+	case !m.LastErrorAt.IsZero() && now.Sub(m.LastErrorAt) < 60*time.Second:
+		snap.Healthy = false
+		snap.HealthReason = "recent error: " + m.LastError
+	}
+
+	return snap
 }
 
 // ── Sepolia store helper ──────────────────────────────────────────────────────
