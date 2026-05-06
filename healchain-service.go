@@ -248,7 +248,7 @@ func main() {
 			ChainID:         11155111,
 			PollInterval:    15 * time.Second,
 			Confirmations:   2,
-			StateFile:       "/tmp/oracle-state.json",
+			StateFile:       "/app/oracle-state.json",
 		}
 		oracle, err := NewOracle(oracleCfg)
 		if err != nil {

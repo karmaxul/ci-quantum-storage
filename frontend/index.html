@@ -4,369 +4,770 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HealChain</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     /* ── Themes ── */
     :root[data-theme="dark"] {
-      --bg:      #0a0e17;
-      --surface: #111827;
-      --surface2:#162033;
-      --border:  #1f2d45;
-      --accent:  #00d4ff;
-      --accent2: #7c3aed;
-      --success: #10b981;
-      --error:   #ef4444;
-      --text:    #e2e8f0;
-      --muted:   #64748b;
-      --grid:    rgba(31,45,69,0.4);
+      --bg:        #080c14;
+      --bg2:       #0d1220;
+      --surface:   #111827;
+      --surface2:  #151e2e;
+      --border:    #1e2d45;
+      --border2:   #253550;
+      --accent:    #00e5ff;
+      --accent2:   #7b2fff;
+      --accent3:   #00ff9d;
+      --success:   #00c98d;
+      --error:     #ff4560;
+      --warn:      #ffb830;
+      --text:      #dde6f5;
+      --muted:     #4d6080;
+      --muted2:    #7a95b8;
+      --glow:      rgba(0,229,255,0.12);
+      --glow2:     rgba(123,47,255,0.1);
     }
 
     :root[data-theme="light"] {
-      --bg:      #f0f4f8;
-      --surface: #ffffff;
-      --surface2:#e8f0f8;
-      --border:  #cbd5e1;
-      --accent:  #0284c7;
-      --accent2: #7c3aed;
-      --success: #059669;
-      --error:   #dc2626;
-      --text:    #0f172a;
-      --muted:   #64748b;
-      --grid:    rgba(203,213,225,0.4);
+      --bg:        #f0f4fa;
+      --bg2:       #e8edf7;
+      --surface:   #ffffff;
+      --surface2:  #f5f8ff;
+      --border:    #d0daea;
+      --border2:   #bccce0;
+      --accent:    #0077cc;
+      --accent2:   #6b21d6;
+      --accent3:   #00a86b;
+      --success:   #00956a;
+      --error:     #d93025;
+      --warn:      #e07b00;
+      --text:      #0a1628;
+      --muted:     #6b82a0;
+      --muted2:    #4a6080;
+      --glow:      rgba(0,119,204,0.08);
+      --glow2:     rgba(107,33,214,0.06);
     }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: var(--sans);
+      font-family: 'DM Sans', sans-serif;
       min-height: 100vh;
-      padding: 40px 20px;
-      transition: background 0.2s, color 0.2s;
-      --mono: 'JetBrains Mono', monospace;
-      --sans: 'Syne', sans-serif;
-      font-family: var(--sans);
+      padding: 32px 20px 60px;
+      transition: background 0.25s, color 0.25s;
+      font-size: 15px;
+      line-height: 1.5;
     }
 
+    /* Subtle dot grid */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image:
-        linear-gradient(var(--grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-      background-size: 40px 40px;
+      background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.5;
       pointer-events: none;
       z-index: 0;
     }
 
-    .container { max-width: 880px; margin: 0 auto; position: relative; z-index: 1; }
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
 
     /* ── Header ── */
     header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 40px;
-      flex-wrap: wrap;
+      margin-bottom: 36px;
       gap: 16px;
+      flex-wrap: wrap;
     }
 
-    .header-left {}
+    .brand { display: flex; flex-direction: column; gap: 10px; }
 
-    .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .logo-row { display: flex; align-items: center; gap: 14px; }
 
-    .logo-icon {
-      width: 38px; height: 38px;
+    .logo-mark {
+      width: 42px; height: 42px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 9px;
+      border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
+      font-size: 22px;
+      box-shadow: 0 0 20px var(--glow);
     }
 
     h1 {
-      font-size: 2rem; font-weight: 800; letter-spacing: -0.5px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-family: 'Space Mono', monospace;
+      font-size: 1.9rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    .status-bar {
-      display: flex; flex-wrap: wrap; gap: 16px;
-      font-family: var(--mono); font-size: 12px; color: var(--muted);
-    }
-
-    .status-dot {
-      display: inline-block; width: 7px; height: 7px;
-      border-radius: 50%; background: var(--success);
-      margin-right: 6px; animation: pulse 2s infinite;
-    }
-    .status-dot.err { background: var(--error); animation: none; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-    /* ── Theme toggle ── */
-    .theme-toggle {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-family: var(--mono);
+    .tagline {
       font-size: 12px;
       color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    .status-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted2);
+      align-items: center;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 10px;
+      transition: border-color 0.2s;
+    }
+
+    .status-pill:hover { border-color: var(--border2); }
+
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+
+    .dot.pulse { animation: pulse 2s infinite; }
+    .dot.err   { background: var(--error); animation: none; }
+    .dot.warn  { background: var(--warn); animation: none; }
+
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
+
+    /* Header controls */
+    .header-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .ctrl-btn {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted2);
       cursor: pointer;
       transition: all 0.15s;
+      letter-spacing: 0.3px;
       white-space: nowrap;
     }
-    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+    .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .ctrl-btn.active { border-color: var(--accent2); color: var(--accent2); background: var(--glow2); }
+
+    /* ── Network badge ── */
+    .network-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .network-badge.devnet  { border-color: var(--accent3); color: var(--accent3); }
+    .network-badge.sepolia { border-color: var(--accent2); color: var(--accent2); }
 
     /* ── Cards ── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 26px;
-      margin-bottom: 18px;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover { border-color: var(--border2); }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .card-title {
-      font-size: 11px; font-family: var(--mono);
-      text-transform: uppercase; letter-spacing: 2px;
-      color: var(--accent); margin-bottom: 18px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      color: var(--accent);
     }
 
-    /* ── Form ── */
-    .field { margin-bottom: 13px; }
+    /* ── Form elements ── */
+    .field { margin-bottom: 14px; }
+
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
 
     label {
-      display: block; font-size: 11px; font-family: var(--mono);
-      color: var(--muted); margin-bottom: 5px;
-      text-transform: uppercase; letter-spacing: 1px;
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      color: var(--muted2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    input[type="text"] {
-      width: 100%; padding: 11px 14px;
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 7px; color: var(--text);
-      font-family: var(--mono); font-size: 14px;
-      outline: none; transition: border-color 0.2s;
-    }
-    input[type="text"]:focus { border-color: var(--accent); }
-    input[type="text"].invalid { border-color: var(--error); }
+    .field-hint { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; }
+    .field-error { font-size: 11px; color: var(--error); display: none; margin-top: 4px; font-family: 'Space Mono', monospace; }
 
-    .field-error { font-size: 11px; color: var(--error); margin-top: 4px; font-family: var(--mono); display: none; }
+    textarea, input[type="text"], input[type="number"] {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      padding: 10px 14px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.6;
+    }
+
+    textarea:focus, input[type="text"]:focus, input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+
+    input.invalid { border-color: var(--error); }
+
+    /* Shard row */
+    .shard-row { display: flex; gap: 12px; }
+    .shard-row .field { flex: 1; margin-bottom: 0; }
+
+    .shard-info {
+      margin-top: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted2);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .shard-stat { display: flex; gap: 5px; align-items: center; }
+    .shard-val  { color: var(--accent); font-weight: 700; }
 
     /* ── Buttons ── */
     .btn-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 
     button {
-      padding: 10px 20px; font-family: var(--mono); font-size: 13px;
-      font-weight: 600; border: none; border-radius: 7px;
-      cursor: pointer; transition: all 0.15s; letter-spacing: 0.5px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.5px;
+      padding: 10px 18px;
     }
 
-    .btn-primary { background: var(--accent); color: var(--bg); }
-    .btn-primary:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      box-shadow: 0 4px 15px var(--glow);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px var(--glow);
+    }
 
     .btn-secondary {
-      background: transparent; color: var(--accent);
-      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border2);
     }
-    .btn-secondary:hover:not(:disabled) { background: rgba(0,212,255,.08); }
+
+    .btn-secondary:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: var(--glow);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted2);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      padding: 7px 12px;
+    }
+
+    .btn-ghost:hover:not(:disabled) { color: var(--text); border-color: var(--border2); }
 
     .btn-danger {
-      background: transparent; color: var(--error);
-      border: 1px solid var(--error);
+      background: transparent;
+      color: var(--error);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      padding: 7px 12px;
     }
-    .btn-danger:hover:not(:disabled) { background: rgba(239,68,68,.08); }
 
-    .btn-sm { padding: 6px 12px; font-size: 11px; }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-danger:hover:not(:disabled) { border-color: var(--error); background: rgba(255,69,96,.06); }
 
-    .row { display: flex; gap: 10px; align-items: flex-end; }
-    .row .field { flex: 1; margin-bottom: 0; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+    /* Quick test buttons */
+    .quick-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .quick-btn {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--muted2);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.3px;
+    }
+
+    .quick-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+
+    /* Inline row */
+    .inline-row { display: flex; gap: 10px; align-items: flex-end; }
+    .inline-row .field { flex: 1; margin-bottom: 0; }
 
     /* ── Result box ── */
     .result-box {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; padding: 14px 16px;
-      font-family: var(--mono); font-size: 13px; line-height: 1.75;
-      min-height: 52px; white-space: pre-wrap; word-break: break-all;
-      color: var(--muted); margin-top: 14px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      min-height: 52px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--muted2);
+      margin-top: 14px;
+      transition: border-color 0.2s;
     }
+
     .result-box.ok  { border-color: var(--success); color: var(--success); }
     .result-box.err { border-color: var(--error);   color: var(--error); }
-    .result-box a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
-    .result-box a:hover { opacity: .75; }
+    .result-box.pending { border-color: var(--warn); color: var(--warn); }
+    .result-box a { color: inherit; text-decoration: underline; text-underline-offset: 3px; opacity: .85; }
+    .result-box a:hover { opacity: 1; }
+
+    /* Hex toggle */
+    .hex-toggle {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted2);
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+    .hex-toggle.active { border-color: var(--accent); color: var(--accent); }
 
     /* ── Copy button ── */
     .copy-btn {
-      background: rgba(0,212,255,.1); border: 1px solid var(--border);
-      color: var(--accent); border-radius: 5px;
-      padding: 2px 8px; font-size: 11px; cursor: pointer;
-      font-family: var(--mono); transition: background 0.15s;
-      vertical-align: middle; margin-left: 6px;
+      display: inline-block;
+      background: var(--glow);
+      border: 1px solid var(--border2);
+      color: var(--accent);
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 10px;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      transition: all 0.15s;
+      vertical-align: middle;
+      margin-left: 5px;
     }
-    .copy-btn:hover { background: rgba(0,212,255,.2); }
-    .copy-btn.copied { color: var(--success); border-color: var(--success); }
 
-    /* ── Records controls ── */
+    .copy-btn:hover { background: var(--glow); border-color: var(--accent); }
+    .copy-btn.ok { color: var(--success); border-color: var(--success); }
+
+    /* ── Compression stats ── */
+    .compress-stats {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .compress-step {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 8px;
+      color: var(--muted2);
+    }
+
+    .compress-arrow { color: var(--muted); }
+    .compress-final { color: var(--accent3); }
+
+    /* ── Records ── */
     .records-controls {
-      display: flex; gap: 10px; align-items: center;
-      margin-bottom: 16px; flex-wrap: wrap;
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-wrap { flex: 1; min-width: 160px; position: relative; }
+
+    .search-wrap::before {
+      content: '⌕';
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 16px;
+      pointer-events: none;
     }
 
     .search-input {
-      flex: 1; min-width: 160px;
-      padding: 9px 14px;
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 7px; color: var(--text);
-      font-family: var(--mono); font-size: 13px;
-      outline: none; transition: border-color 0.2s;
+      width: 100%;
+      padding: 9px 12px 9px 30px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s;
     }
+
     .search-input:focus { border-color: var(--accent); }
 
-    .page-size-select {
-      padding: 9px 12px;
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 7px; color: var(--text);
-      font-family: var(--mono); font-size: 13px;
-      outline: none; cursor: pointer;
+    .page-size {
+      padding: 9px 10px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
     }
 
-    /* ── Pagination ── */
-    .pagination {
-      display: flex; align-items: center; justify-content: center;
-      gap: 8px; margin-top: 16px; font-family: var(--mono); font-size: 13px;
-    }
-
-    .page-btn {
-      padding: 6px 12px; background: var(--surface2);
-      border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); cursor: pointer; font-family: var(--mono);
-      font-size: 12px; transition: all 0.15s;
-    }
-    .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .page-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
-
-    .page-info { color: var(--muted); font-size: 12px; }
-
-    /* ── Record items ── */
     .record-item {
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 8px; padding: 14px 16px;
-      margin-bottom: 10px; font-family: var(--mono); font-size: 13px;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      transition: border-color 0.2s;
     }
+
+    .record-item:hover { border-color: var(--border2); }
 
     .record-top {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
     }
 
-    .record-id {
-      font-size: 11px; color: var(--accent); font-weight: 600;
-      background: rgba(0,212,255,.08); padding: 3px 8px; border-radius: 4px;
+    .record-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .rec-id {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--accent);
+      background: var(--glow);
+      border: 1px solid var(--border2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 1px;
     }
 
-    .record-label { color: var(--text); font-size: 13px; margin-left: 10px; }
+    .rec-label {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
 
     .record-meta {
-      font-size: 11px; color: var(--muted);
-      display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 10px;
     }
 
-    .record-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .meta-item { display: flex; gap: 4px; }
+    .meta-val  { color: var(--muted2); }
 
+    .record-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .page-btn {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted2);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .page-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .page-info { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+
+    /* Empty state */
     .empty-state {
-      text-align: center; padding: 32px;
-      color: var(--muted); font-family: var(--mono); font-size: 13px;
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      border: 1px dashed var(--border2);
+      border-radius: 10px;
     }
 
-    /* ── Spinner ── */
-    .spinner {
-      display: inline-block; width: 13px; height: 13px;
-      border: 2px solid currentColor; border-top-color: transparent;
-      border-radius: 50%; animation: spin .7s linear infinite;
-      vertical-align: middle; margin-right: 6px;
+    .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-cta  { color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+    /* Precompile tester */
+    .precompile-section { display: none; }
+    .precompile-section.visible { display: block; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 2px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+
+    .tab {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      padding: 8px 14px;
+      cursor: pointer;
+      color: var(--muted2);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
+
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Toast ── */
+    /* Toast */
     #toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; padding: 12px 18px;
-      font-family: var(--mono); font-size: 13px; color: var(--text);
-      z-index: 100; transform: translateY(80px); opacity: 0;
-      transition: all 0.3s; pointer-events: none;
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      z-index: 1000;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+      max-width: 320px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
     }
-    #toast.show { transform: translateY(0); opacity: 1; }
-    #toast.ok   { border-color: var(--success); color: var(--success); }
-    #toast.err  { border-color: var(--error);   color: var(--error); }
 
-    /* ── Responsive ── */
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.ok  { border-color: var(--success); }
+    #toast.err { border-color: var(--error); }
+
+    /* Responsive */
     @media (max-width: 600px) {
-      body { padding: 20px 14px; }
-      h1 { font-size: 1.5rem; }
-      .row { flex-direction: column; }
-      .row button { width: 100%; }
-      header { flex-direction: column; }
+      body { padding: 20px 14px 40px; }
+      h1   { font-size: 1.4rem; }
+      .shard-row { flex-direction: column; }
+      .inline-row { flex-direction: column; }
+      .inline-row button { width: 100%; }
     }
   </style>
 </head>
 <body>
 <div class="container">
 
+  <!-- ── Header ── -->
   <header>
-    <div class="header-left">
-      <div class="logo">
-        <div class="logo-icon">⛓</div>
-        <h1>HealChain</h1>
+    <div class="brand">
+      <div class="logo-row">
+        <div class="logo-mark">⛓</div>
+        <div>
+          <h1>HealChain</h1>
+          <div class="tagline">Reed-Solomon erasure coding on Ethereum</div>
+        </div>
       </div>
       <div class="status-bar">
-        <span id="svc-status"><span class="status-dot"></span>Service: localhost:8080</span>
-        <span id="geth-status"><span class="status-dot"></span>Geth: connecting...</span>
-        <span id="records-status" style="display:none"></span>
+        <div class="status-pill" id="svc-pill">
+          <span class="dot pulse" id="svc-dot"></span>
+          <span id="svc-label">Service</span>
+        </div>
+        <div class="status-pill" id="geth-pill">
+          <span class="dot pulse" id="geth-dot"></span>
+          <span id="geth-label">Geth</span>
+        </div>
+        <div class="status-pill">
+          <span class="dot" style="background:var(--accent2)"></span>
+          <span id="records-label">Records: —</span>
+        </div>
+        <span class="network-badge devnet" id="network-badge">DEVNET</span>
       </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="theme-toggle" id="networkBtn" onclick="switchNetwork()">🌐 Sepolia</button>
-      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀ Light Mode</button>
+
+    <div class="header-controls">
+      <button class="ctrl-btn" id="networkBtn" onclick="switchNetwork()">🌐 Sepolia</button>
+      <button class="ctrl-btn" id="themeBtn" onclick="toggleTheme()">☀ Light</button>
+      <button class="ctrl-btn" id="precompileToggle" onclick="togglePrecompile()" style="display:none">⚙ Precompile</button>
     </div>
   </header>
 
-  <!-- Store -->
+  <!-- ── Store ── -->
   <div class="card">
-    <div class="card-title">// Store Data On-Chain</div>
-
-    <div class="field">
-      <label>Data (plain text)</label>
-      <input type="text" id="dataInput" value="Hello from HealChain!"
-        placeholder="Text to store" oninput="validateData()">
-      <div class="field-error" id="dataErr">Data cannot be empty.</div>
+    <div class="card-header">
+      <div class="card-title">// Store Data On-Chain</div>
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="quickTest('text')">Short text</button>
+        <button class="quick-btn" onclick="quickTest('json')">JSON blob</button>
+        <button class="quick-btn" onclick="quickTest('repeat')">Repetitive</button>
+        <button class="quick-btn" onclick="quickTest('lorem')">Long text</button>
+      </div>
     </div>
 
     <div class="field">
-      <label>Label <span style="color:var(--muted)">(max 64 chars)</span></label>
-      <input type="text" id="labelInput" value="browser demo"
-        placeholder="Record label" maxlength="64" oninput="validateLabel()">
-      <div class="field-error" id="labelErr">Label is too long (max 64 characters).</div>
+      <div class="field-label">
+        <label>Data <span class="field-hint">(plain text)</span></label>
+      </div>
+      <textarea id="dataInput" placeholder="Enter text to store on-chain..." oninput="validateData()">Hello from HealChain!</textarea>
+      <div class="field-error" id="dataErr">⚠ Data cannot be empty.</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <label>Label</label>
+        <span class="field-hint" id="labelCount">0 / 64</span>
+      </div>
+      <input type="text" id="labelInput" value="browser demo" placeholder="Record label" maxlength="64" oninput="validateLabel()">
+      <div class="field-error" id="labelErr">⚠ Max 64 characters.</div>
+    </div>
+
+    <!-- Shard config -->
+    <div class="field">
+      <div class="field-label">
+        <label>Shard Configuration <span class="field-hint">(optional)</span></label>
+        <button class="hex-toggle" id="shardToggle" onclick="toggleShards()">customize</button>
+      </div>
+      <div id="shardControls" style="display:none; margin-top:8px">
+        <div class="shard-row">
+          <div class="field">
+            <label>Data Shards</label>
+            <input type="number" id="dataShards" value="10" min="2" max="30" oninput="updateShardInfo()">
+          </div>
+          <div class="field">
+            <label>Parity Shards</label>
+            <input type="number" id="parityShards" value="4" min="1" max="15" oninput="updateShardInfo()">
+          </div>
+        </div>
+        <div class="shard-info" id="shardInfo">
+          <div class="shard-stat">Total shards: <span class="shard-val" id="totalShards">14</span></div>
+          <div class="shard-stat">Survives loss of: <span class="shard-val" id="surviveLoss">4</span> shards</div>
+          <div class="shard-stat">Redundancy: <span class="shard-val" id="redundancy">29%</span></div>
+        </div>
+      </div>
     </div>
 
     <div class="btn-row">
       <button class="btn-primary" id="storeBtn" onclick="storeData()">Store Data</button>
-      <button class="btn-secondary" onclick="clearStore()">Clear</button>
+      <button class="btn-ghost" onclick="clearStore()">Clear</button>
     </div>
 
     <div class="result-box" id="storeResult">Waiting for input...</div>
   </div>
 
-  <!-- Retrieve -->
+  <!-- ── Retrieve ── -->
   <div class="card">
-    <div class="card-title">// Retrieve Record</div>
-    <div class="row">
+    <div class="card-header">
+      <div class="card-title">// Retrieve Record</div>
+      <button class="hex-toggle" id="hexToggle" onclick="toggleHex()" style="display:none">HEX</button>
+    </div>
+
+    <div class="inline-row">
       <div class="field">
         <label>Record ID</label>
         <input type="text" id="retrieveId" value="0" placeholder="0">
@@ -375,13 +776,17 @@
         Retrieve
       </button>
     </div>
+
     <div class="result-box" id="retrieveResult">Enter a record ID and click Retrieve.</div>
   </div>
 
-<!-- Metadata -->
+  <!-- ── Metadata ── -->
   <div class="card">
-    <div class="card-title">// Record Metadata</div>
-    <div class="row">
+    <div class="card-header">
+      <div class="card-title">// Record Metadata</div>
+    </div>
+
+    <div class="inline-row">
       <div class="field">
         <label>Record ID</label>
         <input type="text" id="metadataId" value="0" placeholder="0">
@@ -390,80 +795,229 @@
         Get Metadata
       </button>
     </div>
+
     <div class="result-box" id="metadataResult">Enter a record ID and click Get Metadata.</div>
   </div>
 
-  <!-- Records -->
+  <!-- ── Records browser ── -->
   <div class="card">
-    <div class="card-title">// Records Browser</div>
-
-    <div class="records-controls">
-      <input class="search-input" type="text" id="searchInput"
-        placeholder="Search by label..." oninput="filterRecords()">
-      <select class="page-size-select" id="pageSizeSelect" onchange="changePageSize()">
-        <option value="5">5 per page</option>
-        <option value="10" selected>10 per page</option>
-        <option value="25">25 per page</option>
-        <option value="50">50 per page</option>
-      </select>
-      <button class="btn-secondary btn-sm" id="refreshBtn" onclick="loadRecords(0)">Refresh</button>
+    <div class="card-header">
+      <div class="card-title">// Records Browser</div>
     </div>
 
-    <div id="records-list"><div class="empty-state">Click Refresh to load records.</div></div>
+    <div class="records-controls">
+      <div class="search-wrap">
+        <input class="search-input" type="text" id="searchInput"
+          placeholder="Search by label or ID..." oninput="filterRecords()">
+      </div>
+      <select class="page-size" id="pageSizeSelect" onchange="changePageSize()">
+        <option value="5">5 / page</option>
+        <option value="10" selected>10 / page</option>
+        <option value="25">25 / page</option>
+        <option value="50">50 / page</option>
+      </select>
+      <button class="btn-secondary" id="refreshBtn" onclick="loadRecords(0)" style="padding:9px 14px;font-size:11px">
+        ↻ Refresh
+      </button>
+    </div>
+
+    <div id="records-list">
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        Click Refresh to load records.
+      </div>
+    </div>
 
     <div class="pagination" id="pagination" style="display:none"></div>
   </div>
 
-</div>
+  <!-- ── Precompile tester (devnet only) ── -->
+  <div class="card precompile-section" id="precompileSection">
+    <div class="card-header">
+      <div class="card-title">// Precompile Tester <span style="color:var(--accent3);font-size:9px;margin-left:8px">DEVNET ONLY</span></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('encode')">Encode</div>
+      <div class="tab" onclick="switchTab('decode')">Decode</div>
+    </div>
+
+    <div id="encodeTab">
+      <div class="field">
+        <label>Raw Data (hex)</label>
+        <input type="text" id="encodeInput" placeholder="0x4865616c436861696e...">
+      </div>
+      <div class="shard-row">
+        <div class="field">
+          <label>Data Shards</label>
+          <input type="number" id="encDataShards" value="10" min="2" max="30">
+        </div>
+        <div class="field">
+          <label>Parity Shards</label>
+          <input type="number" id="encParityShards" value="4" min="1" max="15">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" id="encodeBtn" onclick="testEncode()" style="font-size:11px">
+          Run Encode Precompile
+        </button>
+      </div>
+      <div class="result-box" id="encodeResult">Output will appear here.</div>
+    </div>
+
+    <div id="decodeTab" style="display:none">
+      <div class="field">
+        <label>Encoded Data (hex)</label>
+        <input type="text" id="decodeInput" placeholder="0x...">
+      </div>
+      <div class="shard-row">
+        <div class="field">
+          <label>Data Shards</label>
+          <input type="number" id="decDataShards" value="10" min="2" max="30">
+        </div>
+        <div class="field">
+          <label>Parity Shards</label>
+          <input type="number" id="decParityShards" value="4" min="1" max="15">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" id="decodeBtn" onclick="testDecode()" style="font-size:11px">
+          Run Decode Precompile
+        </button>
+      </div>
+      <div class="result-box" id="decodeResult">Output will appear here.</div>
+    </div>
+  </div>
+
+</div><!-- /container -->
 
 <div id="toast"></div>
 
 <script>
-// ── Network config ────────────────────────────────────────────────────────
+  // ── Network config ────────────────────────────────────────────────────────
   const NETWORKS = {
     devnet: {
-      name:        "Devnet",
-      svc:         "http://localhost:8080",
-      explorer:    null,
-      contract:    "0x— local —",
-      chainId:     "1337",
+      name:     "Devnet",
+      svc:      "http://localhost:8080",
+      explorer: null,
+      chainId:  "1337",
     },
     sepolia: {
-      name:        "Sepolia",
-      svc:         "http://localhost:8080",
-      explorer:    "https://sepolia.etherscan.io/tx",
-      contract:    "0xBffb39930647DBB5971690ea6e9F0CF393307e64",
-      chainId:     "11155111",
+      name:     "Sepolia",
+      svc:      "http://localhost:8080",
+      explorer: "https://sepolia.etherscan.io/tx",
+      chainId:  "11155111",
     }
   };
 
-  let currentNetwork = localStorage.getItem("network") || "devnet";
+  let currentNetwork = localStorage.getItem("hc_network") || "devnet";
+  let allRecords     = [];
+  let currentPage    = 0;
+  let totalPages     = 1;
+  let totalRecords   = 0;
+  let showHex        = false;
+  let lastRetrieved  = null;
 
   function getNet() { return NETWORKS[currentNetwork]; }
-  const SVC = () => getNet().svc;
-  const EXPLORER_BASE = () => getNet().explorer;
+  const SVC          = () => getNet().svc;
+  const EXPLORER     = () => getNet().explorer;
 
-  // ── State ─────────────────────────────────────────────────────────────────
-  let currentPage  = 0;
-  let totalPages   = 1;
-  let totalRecords = 0;
-  let allRecords   = []; // cached for client-side filtering
+  // ── Quick tests ───────────────────────────────────────────────────────────
+
+  const QUICK = {
+    text:   { data: "Hello from HealChain! Reed-Solomon keeps this safe.", label: "short text" },
+    json:   { data: JSON.stringify({ project: "HealChain", version: "2.4", network: "Sepolia", timestamp: Date.now() }), label: "json blob" },
+    repeat: { data: "HealChain self-healing storage. ".repeat(8), label: "repetitive text" },
+    lorem:  { data: "HealChain leverages Reed-Solomon erasure coding to provide self-healing on-chain storage. Even if multiple shards are lost, the original data can be fully reconstructed from the remaining shards. This makes it resilient against node failures, data corruption, and network partitions.", label: "long text" },
+  };
+
+  function quickTest(type) {
+    const q = QUICK[type];
+    document.getElementById("dataInput").value  = q.data;
+    document.getElementById("labelInput").value = q.label;
+    validateData();
+    validateLabel();
+    toast(`Loaded: ${type} test`, "");
+  }
 
   // ── Theme ─────────────────────────────────────────────────────────────────
 
   function toggleTheme() {
-    const html = document.documentElement;
-    const isDark = html.getAttribute("data-theme") === "dark";
-    html.setAttribute("data-theme", isDark ? "light" : "dark");
-    document.getElementById("themeBtn").textContent = isDark ? "🌙 Dark Mode" : "☀ Light Mode";
-    localStorage.setItem("theme", isDark ? "light" : "dark");
+    const html  = document.documentElement;
+    const dark  = html.getAttribute("data-theme") === "dark";
+    html.setAttribute("data-theme", dark ? "light" : "dark");
+    document.getElementById("themeBtn").textContent = dark ? "🌙 Dark" : "☀ Light";
+    localStorage.setItem("hc_theme", dark ? "light" : "dark");
   }
 
   function initTheme() {
-    const saved = localStorage.getItem("theme") || "dark";
+    const saved = localStorage.getItem("hc_theme") || "dark";
     document.documentElement.setAttribute("data-theme", saved);
-    document.getElementById("themeBtn").textContent =
-      saved === "dark" ? "☀ Light Mode" : "🌙 Dark Mode";
+    document.getElementById("themeBtn").textContent = saved === "dark" ? "☀ Light" : "🌙 Dark";
+  }
+
+  // ── Network ───────────────────────────────────────────────────────────────
+
+  function switchNetwork() {
+    currentNetwork = currentNetwork === "devnet" ? "sepolia" : "devnet";
+    localStorage.setItem("hc_network", currentNetwork);
+    updateNetworkUI();
+    checkStatus();
+    loadRecords(0);
+  }
+
+  function updateNetworkUI() {
+    const isSepolia = currentNetwork === "sepolia";
+    const btn       = document.getElementById("networkBtn");
+    const badge     = document.getElementById("network-badge");
+    const preToggle = document.getElementById("precompileToggle");
+
+    btn.textContent  = isSepolia ? "🏠 Devnet" : "🌐 Sepolia";
+    btn.classList.toggle("active", isSepolia);
+
+    badge.textContent = isSepolia ? "SEPOLIA" : "DEVNET";
+    badge.className   = "network-badge " + (isSepolia ? "sepolia" : "devnet");
+
+    // Show precompile tester only on devnet
+    preToggle.style.display = isSepolia ? "none" : "inline-block";
+    if (isSepolia) {
+      document.getElementById("precompileSection").classList.remove("visible");
+    }
+  }
+
+  // ── Precompile tester toggle ──────────────────────────────────────────────
+
+  function togglePrecompile() {
+    const sec = document.getElementById("precompileSection");
+    sec.classList.toggle("visible");
+    document.getElementById("precompileToggle").classList.toggle("active");
+  }
+
+  function switchTab(tab) {
+    document.getElementById("encodeTab").style.display = tab === "encode" ? "block" : "none";
+    document.getElementById("decodeTab").style.display = tab === "decode" ? "block" : "none";
+    document.querySelectorAll(".tab").forEach((t, i) => {
+      t.classList.toggle("active", (i === 0 && tab === "encode") || (i === 1 && tab === "decode"));
+    });
+  }
+
+  // ── Shard controls ────────────────────────────────────────────────────────
+
+  function toggleShards() {
+    const ctrl = document.getElementById("shardControls");
+    const btn  = document.getElementById("shardToggle");
+    const vis  = ctrl.style.display === "none";
+    ctrl.style.display = vis ? "block" : "none";
+    btn.textContent    = vis ? "hide" : "customize";
+    btn.classList.toggle("active", vis);
+  }
+
+  function updateShardInfo() {
+    const d = parseInt(document.getElementById("dataShards").value)   || 10;
+    const p = parseInt(document.getElementById("parityShards").value) || 4;
+    document.getElementById("totalShards").textContent = d + p;
+    document.getElementById("surviveLoss").textContent = p;
+    document.getElementById("redundancy").textContent  = Math.round((p / (d + p)) * 100) + "%";
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -473,20 +1027,29 @@
       .map(b => b.toString(16).padStart(2, "0")).join("");
   }
 
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  function hexToStr(hex) {
+    const h = hex.startsWith("0x") ? hex.slice(2) : hex;
+    try {
+      return decodeURIComponent(h.replace(/../g, '%$&'));
+    } catch {
+      return h;
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
 
   function setResult(id, html, state) {
-    const el = document.getElementById(id);
-    el.innerHTML = html;
-    el.className = "result-box" + (state ? " " + state : "");
+    const el  = document.getElementById(id);
+    el.innerHTML  = html;
+    el.className  = "result-box" + (state ? " " + state : "");
   }
 
   function setLoading(btnId, loading, label) {
-    const btn = document.getElementById(btnId);
+    const btn    = document.getElementById(btnId);
     btn.disabled = loading;
     btn.innerHTML = loading ? `<span class="spinner"></span>${label}` : label;
   }
@@ -494,104 +1057,93 @@
   function toast(msg, type = "") {
     const el = document.getElementById("toast");
     el.textContent = msg;
-    el.className = "show" + (type ? " " + type : "");
+    el.className   = "show" + (type ? " " + type : "");
     clearTimeout(el._t);
     el._t = setTimeout(() => { el.className = ""; }, 3000);
   }
 
-function copyToClipboard(text, btn) {
-  // Try modern clipboard API first (requires HTTPS or localhost)
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      btn.textContent = "✓ copied";
-      btn.classList.add("copied");
-      setTimeout(() => { btn.textContent = "copy"; btn.classList.remove("copied"); }, 1500);
-    }).catch(() => fallbackCopy(text, btn));
-  } else {
-    fallbackCopy(text, btn);
-  }
-}
-
-function fallbackCopy(text, btn) {
-  // Fallback: create a temporary textarea and use execCommand
-  const ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed";
-  ta.style.opacity = "0";
-  document.body.appendChild(ta);
-  ta.focus();
-  ta.select();
-  try {
-    document.execCommand("copy");
-    btn.textContent = "✓ copied";
-    btn.classList.add("copied");
-    setTimeout(() => { btn.textContent = "copy"; btn.classList.remove("copied"); }, 1500);
-  } catch {
-    btn.textContent = "failed";
-    setTimeout(() => { btn.textContent = "copy"; }, 1500);
-  }
-  document.body.removeChild(ta);
-}
-
-  function clearStore() {
-    setResult("storeResult", "Waiting for input...", "");
-    document.getElementById("dataInput").classList.remove("invalid");
-    document.getElementById("dataErr").style.display = "none";
+  function copyText(text, btn) {
+    const copy = () => {
+      btn.textContent = "✓";
+      btn.classList.add("ok");
+      setTimeout(() => { btn.textContent = "copy"; btn.classList.remove("ok"); }, 1500);
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(copy).catch(() => fallbackCopy(text, copy));
+    } else {
+      fallbackCopy(text, copy);
+    }
   }
 
-  // ── Validation ─────────────────────────────────────────────────────────────
+  function fallbackCopy(text, cb) {
+    const ta = Object.assign(document.createElement("textarea"), {
+      value: text, style: "position:fixed;opacity:0"
+    });
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); cb(); } catch {}
+    document.body.removeChild(ta);
+  }
+
+  // ── Validation ────────────────────────────────────────────────────────────
 
   function validateData() {
-    const val = document.getElementById("dataInput").value.trim();
-    const err = document.getElementById("dataErr");
-    const inp = document.getElementById("dataInput");
-    if (!val) { inp.classList.add("invalid"); err.style.display = "block"; return false; }
-    inp.classList.remove("invalid"); err.style.display = "none"; return true;
+    const v = document.getElementById("dataInput").value.trim();
+    const ok = v.length > 0;
+    document.getElementById("dataInput").classList.toggle("invalid", !ok);
+    document.getElementById("dataErr").style.display = ok ? "none" : "block";
+    return ok;
   }
 
   function validateLabel() {
-    const val = document.getElementById("labelInput").value;
-    const err = document.getElementById("labelErr");
-    const inp = document.getElementById("labelInput");
-    if (val.length > 64) { inp.classList.add("invalid"); err.style.display = "block"; return false; }
-    inp.classList.remove("invalid"); err.style.display = "none"; return true;
+    const v = document.getElementById("labelInput").value;
+    document.getElementById("labelCount").textContent = `${v.length} / 64`;
+    const ok = v.length <= 64;
+    document.getElementById("labelInput").classList.toggle("invalid", !ok);
+    document.getElementById("labelErr").style.display = ok ? "none" : "block";
+    return ok;
   }
 
-  // ── Status ─────────────────────────────────────────────────────────────────
+  function clearStore() {
+    document.getElementById("dataInput").value = "";
+    document.getElementById("labelInput").value = "";
+    document.getElementById("dataInput").classList.remove("invalid");
+    document.getElementById("dataErr").style.display = "none";
+    setResult("storeResult", "Waiting for input...", "");
+  }
+
+  // ── Status ────────────────────────────────────────────────────────────────
 
   async function checkStatus() {
     try {
       const res  = await fetch(`${SVC()}/health`);
       const json = await res.json();
 
-      document.getElementById("svc-status").innerHTML =
-        `<span class="status-dot"></span>Service v${json.version}`;
+      document.getElementById("svc-dot").className    = "dot pulse";
+      document.getElementById("svc-label").textContent = `v${json.version}`;
+      document.getElementById("geth-dot").className    = json.geth === "ok" ? "dot pulse" : "dot err";
+      document.getElementById("geth-label").textContent = json.geth === "ok"
+        ? `Block ${json.lastBlock}`
+        : "Geth offline";
 
-      document.getElementById("geth-status").innerHTML =
-        json.geth === "ok"
-          ? `<span class="status-dot"></span>Geth: block ${json.lastBlock} · chain ${json.chainId}`
-          : `<span class="status-dot err"></span>Geth: unreachable`;
-
-      // Fetch total from stats
       const sr = await fetch(`${SVC()}/stats`);
       const sj = await sr.json();
-      const rs = document.getElementById("records-status");
-      rs.style.display = "inline";
-      rs.innerHTML = `<span class="status-dot"></span>Records: ${sj.totalRecords}`;
+      document.getElementById("records-label").textContent = `Records: ${sj.totalRecords}`;
     } catch {
-      document.getElementById("svc-status").innerHTML =
-        `<span class="status-dot err"></span>Service: unreachable`;
+      document.getElementById("svc-dot").className     = "dot err";
+      document.getElementById("svc-label").textContent  = "Offline";
     }
   }
 
-  // ── Store ──────────────────────────────────────────────────────────────────
+  // ── Store ─────────────────────────────────────────────────────────────────
 
   async function storeData() {
     if (!validateData() || !validateLabel()) return;
 
     const raw    = document.getElementById("dataInput").value.trim();
     const label  = document.getElementById("labelInput").value.trim() || "browser demo";
-    const net    = getNet();
+    const dShards = parseInt(document.getElementById("dataShards").value)   || 10;
+    const pShards = parseInt(document.getElementById("parityShards").value) || 4;
 
     setLoading("storeBtn", true, "Storing...");
     setResult("storeResult", "Sending to service...", "");
@@ -601,59 +1153,65 @@ function fallbackCopy(text, btn) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          data:    strToHex(raw),
-          label:   label,
-          network: currentNetwork
+          data:         strToHex(raw),
+          label,
+          network:      currentNetwork,
+          dataShards:   dShards,
+          parityShards: pShards,
         })
       });
 
       const json = await res.json();
 
       if (!res.ok) {
-        setResult("storeResult", `❌ Error: ${escapeHtml(json.error || res.statusText)}`, "err");
+        setResult("storeResult", `❌ ${escapeHtml(json.error || res.statusText)}`, "err");
         toast("Store failed", "err");
         return;
       }
 
-      // ── Sepolia async path ──────────────────────────────────────────────
+      // Sepolia async path
       if (json.status === "pending" && json.requestId !== undefined) {
-        const explorer  = EXPLORER_BASE();
-        const txLink    = explorer
-          ? `<a href="${explorer}/${json.tx}" target="_blank" rel="noopener">${escapeHtml(json.tx)}</a>`
+        const exp    = EXPLORER();
+        const txLink = exp
+          ? `<a href="${exp}/${json.tx}" target="_blank" rel="noopener">${escapeHtml(json.tx)}</a>`
           : escapeHtml(json.tx);
 
         setResult("storeResult",
           `⏳ Submitted to Sepolia!\n` +
-          `Request ID:   ${escapeHtml(json.requestId)} <button class="copy-btn" onclick="copyToClipboard('${json.requestId}',this)">copy</button>\n` +
-          `Tx:           ${txLink}\n` +
-          `Status:       Waiting for oracle fulfillment...\n` +
-          `Explorer:     <a href="${escapeHtml(json.explorerUrl)}" target="_blank" rel="noopener">View on Etherscan</a>`,
-          ""
+          `Request ID:  ${escapeHtml(json.requestId)} <button class="copy-btn" onclick="copyText('${json.requestId}',this)">copy</button>\n` +
+          `Tx:          ${txLink}\n` +
+          `Status:      Waiting for oracle...\n` +
+          `Explorer:    <a href="${escapeHtml(json.explorerUrl)}" target="_blank" rel="noopener">View on Etherscan ↗</a>`,
+          "pending"
         );
-
-        toast("⏳ Submitted — waiting for oracle...");
+        toast("⏳ Submitted — oracle processing...");
         pollSepoliaStatus(json.requestId, json.tx);
         return;
       }
 
-      // ── Devnet sync path ────────────────────────────────────────────────
-      const explorer = EXPLORER_BASE();
-      const txLink   = explorer
-        ? `<a href="${explorer}/${json.tx}" target="_blank" rel="noopener">${escapeHtml(json.tx)}</a>`
+      // Devnet sync path
+      const exp    = EXPLORER();
+      const txLink = exp
+        ? `<a href="${exp}/${json.tx}" target="_blank" rel="noopener">${escapeHtml(json.tx)}</a>`
         : escapeHtml(json.tx);
-      const retUrl   = `${SVC()}/retrieve?id=${json.recordId}`;
+      const retUrl = `${SVC()}/retrieve?id=${json.recordId}`;
+
+      const origBytes = parseInt(json.originalSize) || 0;
+      const encBytes  = parseInt(json.encodedSize)  || 0;
+      const rawBytes  = raw.length;
 
       setResult("storeResult",
         `✅ Stored successfully!\n` +
-        `Record ID:    ${escapeHtml(json.recordId)} <button class="copy-btn" onclick="copyToClipboard('${json.recordId}',this)">copy</button>\n` +
+        `Record ID:    ${escapeHtml(json.recordId)} <button class="copy-btn" onclick="copyText('${json.recordId}',this)">copy</button>\n` +
         `Tx:           ${txLink}\n` +
-        `Original:     ${escapeHtml(json.originalSize)} bytes\n` +
-        `Encoded:      ${escapeHtml(json.encodedSize)} bytes\n` +
-        `Retrieve URL: <a href="${retUrl}" target="_blank">${escapeHtml(retUrl)}</a> <button class="copy-btn" onclick="copyToClipboard('${retUrl}',this)">copy</button>`,
+        `Retrieve URL: <a href="${retUrl}" target="_blank" rel="noopener">${escapeHtml(retUrl)}</a> <button class="copy-btn" onclick="copyText('${retUrl}',this)">copy</button>\n` +
+        `\n` +
+        `Compression:  ${rawBytes}B → ${origBytes}B → ${encBytes}B (RS encoded)`,
         "ok"
       );
 
-      document.getElementById("retrieveId").value = json.recordId;
+      document.getElementById("retrieveId").value  = json.recordId;
+      document.getElementById("metadataId").value  = json.recordId;
       toast("✅ Stored!", "ok");
       loadRecords(0);
       checkStatus();
@@ -666,27 +1224,27 @@ function fallbackCopy(text, btn) {
     }
   }
 
-  // ── Sepolia fulfillment polling ───────────────────────────────────────────
+  // ── Sepolia polling ───────────────────────────────────────────────────────
 
   async function pollSepoliaStatus(requestId, txHash, attempt = 0) {
-    const maxAttempts = 20; // 20 × 6s = 2 minutes max
-    const explorer    = EXPLORER_BASE();
-    const txLink      = explorer
-      ? `<a href="${explorer}/${txHash}" target="_blank" rel="noopener">${escapeHtml(txHash)}</a>`
+    const MAX = 20;
+    const exp = EXPLORER();
+    const txLink = exp
+      ? `<a href="${exp}/${txHash}" target="_blank" rel="noopener">${escapeHtml(txHash)}</a>`
       : escapeHtml(txHash);
 
-    if (attempt >= maxAttempts) {
+    if (attempt >= MAX) {
       setResult("storeResult",
         `⚠ Oracle taking longer than expected.\n` +
         `Request ID: ${escapeHtml(requestId)}\n` +
         `Tx:         ${txLink}\n` +
-        `Check status manually: ${SVC()}/sepoliaStatus?requestId=${requestId}`,
+        `Poll: ${SVC()}/sepoliaStatus?requestId=${requestId}`,
         "err"
       );
       return;
     }
 
-    await new Promise(r => setTimeout(r, 6000)); // wait 6s between polls
+    await new Promise(r => setTimeout(r, 6000));
 
     try {
       const res  = await fetch(`${SVC()}/sepoliaStatus?requestId=${requestId}`);
@@ -695,10 +1253,10 @@ function fallbackCopy(text, btn) {
       if (json.status === "fulfilled") {
         setResult("storeResult",
           `✅ Stored on Sepolia!\n` +
-          `Request ID:    ${escapeHtml(requestId)} <button class="copy-btn" onclick="copyToClipboard('${requestId}',this)">copy</button>\n` +
+          `Request ID:    ${escapeHtml(requestId)} <button class="copy-btn" onclick="copyText('${requestId}',this)">copy</button>\n` +
           `Tx:            ${txLink}\n` +
           `Total records: ${escapeHtml(json.totalRecords)} on Sepolia\n` +
-          `Explorer:      <a href="https://sepolia.etherscan.io/address/${escapeHtml(json.contract)}" target="_blank" rel="noopener">View contract</a>`,
+          `Contract:      <a href="https://sepolia.etherscan.io/address/${escapeHtml(json.contract)}" target="_blank" rel="noopener">View on Etherscan ↗</a>`,
           "ok"
         );
         toast("✅ Stored on Sepolia!", "ok");
@@ -707,24 +1265,22 @@ function fallbackCopy(text, btn) {
         return;
       }
 
-      // Still pending — update UI and poll again
       setResult("storeResult",
         `⏳ Submitted to Sepolia!\n` +
-        `Request ID:   ${escapeHtml(requestId)}\n` +
-        `Tx:           ${txLink}\n` +
-        `Status:       Oracle processing... (attempt ${attempt + 1}/${maxAttempts})\n` +
-        `Explorer:     <a href="https://sepolia.etherscan.io/tx/${txHash}" target="_blank" rel="noopener">View on Etherscan</a>`,
-        ""
+        `Request ID:  ${escapeHtml(requestId)}\n` +
+        `Tx:          ${txLink}\n` +
+        `Status:      Oracle processing... (${attempt + 1}/${MAX})\n` +
+        `Explorer:    <a href="https://sepolia.etherscan.io/tx/${txHash}" target="_blank" rel="noopener">View on Etherscan ↗</a>`,
+        "pending"
       );
 
       pollSepoliaStatus(requestId, txHash, attempt + 1);
-
-    } catch (err) {
+    } catch {
       pollSepoliaStatus(requestId, txHash, attempt + 1);
     }
   }
 
-  // ── Retrieve ───────────────────────────────────────────────────────────────
+  // ── Retrieve ──────────────────────────────────────────────────────────────
 
   async function retrieveData(id) {
     const idVal = id !== undefined ? String(id) : document.getElementById("retrieveId").value.trim();
@@ -739,17 +1295,15 @@ function fallbackCopy(text, btn) {
       const json = await res.json();
 
       if (!res.ok) {
-        setResult("retrieveResult", `❌ Error: ${escapeHtml(json.error || res.statusText)}`, "err");
+        setResult("retrieveResult", `❌ ${escapeHtml(json.error || res.statusText)}`, "err");
         return;
       }
 
-      setResult("retrieveResult",
-        `✅ Record ${escapeHtml(json.recordId)}\n` +
-        `Text: ${escapeHtml(json.text)}\n` +
-        `Hex:  ${escapeHtml(json.data)}\n` +
-        `Size: ${json.bytes} bytes`,
-        "ok"
-      );
+      lastRetrieved = json;
+      document.getElementById("hexToggle").style.display = "inline-block";
+      document.getElementById("hexToggle").classList.toggle("active", showHex);
+      renderRetrieved();
+
     } catch (err) {
       setResult("retrieveResult", `❌ Network error: ${escapeHtml(err.message)}`, "err");
     } finally {
@@ -757,7 +1311,27 @@ function fallbackCopy(text, btn) {
     }
   }
 
-// ── Metadata ───────────────────────────────────────────────────────────────
+  function renderRetrieved() {
+    if (!lastRetrieved) return;
+    const j = lastRetrieved;
+    setResult("retrieveResult",
+      `✅ Record ${escapeHtml(j.recordId)}\n` +
+      (showHex
+        ? `Hex:  ${escapeHtml(j.data)}\n`
+        : `Text: ${escapeHtml(j.text)}\n`) +
+      `Size: ${j.bytes} bytes`,
+      "ok"
+    );
+  }
+
+  function toggleHex() {
+    showHex = !showHex;
+    document.getElementById("hexToggle").classList.toggle("active", showHex);
+    document.getElementById("hexToggle").textContent = showHex ? "TEXT" : "HEX";
+    renderRetrieved();
+  }
+
+  // ── Metadata ──────────────────────────────────────────────────────────────
 
   async function getMetadata(id) {
     const idVal = id !== undefined ? String(id) : document.getElementById("metadataId").value.trim();
@@ -772,7 +1346,7 @@ function fallbackCopy(text, btn) {
       const json = await res.json();
 
       if (!res.ok) {
-        setResult("metadataResult", `❌ Error: ${escapeHtml(json.error || res.statusText)}`, "err");
+        setResult("metadataResult", `❌ ${escapeHtml(json.error || res.statusText)}`, "err");
         return;
       }
 
@@ -784,12 +1358,11 @@ function fallbackCopy(text, btn) {
         `Owner:         ${escapeHtml(json.owner)}\n` +
         `Original size: ${escapeHtml(json.originalSize)} bytes\n` +
         `Encoded size:  ${escapeHtml(json.encodedSize)} bytes\n` +
-        `Data shards:   ${json.dataShards}   Parity shards: ${json.parityShards}\n` +
+        `Shards:        ${json.dataShards} data + ${json.parityShards} parity\n` +
         `Timestamp:     ${escapeHtml(ts)}\n` +
         `Data hash:     ${escapeHtml(json.dataHash)}`,
         "ok"
       );
-
     } catch (err) {
       setResult("metadataResult", `❌ Network error: ${escapeHtml(err.message)}`, "err");
     } finally {
@@ -797,10 +1370,10 @@ function fallbackCopy(text, btn) {
     }
   }
 
-  // ── Delete ─────────────────────────────────────────────────────────────────
+  // ── Delete ────────────────────────────────────────────────────────────────
 
-  async function deleteRecord(id) {
-    if (!confirm(`Delete record ${id}? This cannot be undone.`)) return;
+  async function deleteRecord(id, label) {
+    if (!confirm(`Delete record ${id} "${label}"?\nThis cannot be undone.`)) return;
     toast(`Deleting record ${id}...`);
     try {
       const res  = await fetch(`${SVC()}/delete?id=${id}`);
@@ -814,35 +1387,7 @@ function fallbackCopy(text, btn) {
     }
   }
 
-// ── Network switcher ──────────────────────────────────────────────────────
-
-  function switchNetwork() {
-    currentNetwork = currentNetwork === "devnet" ? "sepolia" : "devnet";
-    localStorage.setItem("network", currentNetwork);
-    updateNetworkUI();
-    checkStatus();
-    loadRecords(0);
-  }
-
-  function updateNetworkUI() {
-    const net = getNet();
-    const btn = document.getElementById("networkBtn");
-    btn.textContent = currentNetwork === "devnet"
-      ? "🌐 Switch to Sepolia"
-      : "🏠 Switch to Devnet";
-    btn.style.borderColor = currentNetwork === "sepolia" ? "var(--accent2)" : "";
-    btn.style.color       = currentNetwork === "sepolia" ? "var(--accent2)" : "";
-
-    // Update status bar
-    document.getElementById("svc-status").innerHTML =
-      `<span class="status-dot"></span>${net.name} · chain ${net.chainId}`;
-  }
-
-  function initNetwork() {
-    updateNetworkUI();
-  }
-
-  // ── Records with pagination ────────────────────────────────────────────────
+  // ── Records browser ───────────────────────────────────────────────────────
 
   async function loadRecords(page = 0) {
     const limit = parseInt(document.getElementById("pageSizeSelect").value) || 10;
@@ -850,7 +1395,7 @@ function fallbackCopy(text, btn) {
     const btn   = document.getElementById("refreshBtn");
     const pag   = document.getElementById("pagination");
 
-    currentPage = page;
+    currentPage  = page;
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner"></span>Loading...`;
     list.innerHTML = "";
@@ -861,7 +1406,7 @@ function fallbackCopy(text, btn) {
       const json = await res.json();
 
       if (!res.ok) {
-        list.innerHTML = `<div class="empty-state">Failed to load records.</div>`;
+        list.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div>Failed to load records.</div>`;
         return;
       }
 
@@ -870,73 +1415,75 @@ function fallbackCopy(text, btn) {
       totalRecords = json.total   || 0;
 
       renderRecords(allRecords);
-      renderPagination(page, totalPages, limit);
+      renderPagination(page, totalPages);
 
     } catch (err) {
-      list.innerHTML = `<div class="empty-state">Error: ${escapeHtml(err.message)}</div>`;
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div>${escapeHtml(err.message)}</div>`;
     } finally {
-      btn.disabled = false;
-      btn.innerHTML = "Refresh";
+      btn.disabled  = false;
+      btn.innerHTML = "↻ Refresh";
     }
   }
 
   function renderRecords(records) {
-    const list = document.getElementById("records-list");
+    const list   = document.getElementById("records-list");
     const search = document.getElementById("searchInput").value.toLowerCase().trim();
 
     const filtered = search
-      ? records.filter(r => r.label.toLowerCase().includes(search) || r.id.includes(search))
+      ? records.filter(r =>
+          r.label.toLowerCase().includes(search) ||
+          r.id.includes(search) ||
+          r.owner.toLowerCase().includes(search))
       : records;
 
     if (filtered.length === 0) {
-      list.innerHTML = search
-        ? `<div class="empty-state">No records match "<strong>${escapeHtml(search)}</strong>".</div>`
-        : `<div class="empty-state">No records found. Store some data first.</div>`;
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">${search ? "🔍" : "📭"}</div>
+          ${search
+            ? `No records match <strong>"${escapeHtml(search)}"</strong>`
+            : `No records yet. <span class="empty-cta" onclick="document.getElementById('dataInput').focus()">Store something!</span>`}
+        </div>`;
       return;
     }
 
-    list.innerHTML = filtered.map(r => `
-      <div class="record-item">
-        <div class="record-top">
-          <div>
-            <span class="record-id">ID ${escapeHtml(r.id)}</span>
-            <span class="record-label">${escapeHtml(r.label)}</span>
+    list.innerHTML = filtered.map(r => {
+      const ts = new Date(parseInt(r.timestamp) * 1000).toLocaleDateString();
+      return `
+        <div class="record-item">
+          <div class="record-top">
+            <div class="record-left">
+              <span class="rec-id">ID ${escapeHtml(r.id)}</span>
+              <span class="rec-label">${escapeHtml(r.label)}</span>
+            </div>
+            <div class="record-actions">
+              <button class="btn-ghost" onclick="retrieveData('${r.id}')">Retrieve</button>
+              <button class="btn-ghost" onclick="getMetadata('${r.id}')">Metadata</button>
+              <button class="btn-danger" onclick="deleteRecord('${r.id}','${escapeHtml(r.label)}')">Delete</button>
+            </div>
           </div>
-          <div class="record-actions">
-            <button class="btn-secondary btn-sm" onclick="retrieveData('${r.id}')">Retrieve</button>
-            <button class="btn-secondary btn-sm" onclick="getMetadata('${r.id}')">Metadata</button>
-            <button class="btn-danger btn-sm" onclick="deleteRecord('${r.id}')">Delete</button>
+          <div class="record-meta">
+            <div class="meta-item">Original: <span class="meta-val">${r.originalSize}B</span></div>
+            <div class="meta-item">Encoded: <span class="meta-val">${r.encodedSize}B</span></div>
+            <div class="meta-item">Shards: <span class="meta-val">${r.dataShards}+${r.parityShards}</span></div>
+            <div class="meta-item">Owner: <span class="meta-val">${r.owner.slice(0,10)}...</span></div>
+            <div class="meta-item">Date: <span class="meta-val">${ts}</span></div>
           </div>
-        </div>
-        <div class="record-meta">
-          <span>Original: ${r.originalSize} bytes</span>
-          <span>Encoded: ${r.encodedSize} bytes</span>
-          <span>Shards: ${r.dataShards}+${r.parityShards}</span>
-          <span>Owner: ${r.owner.slice(0,10)}...</span>
-        </div>
-      </div>
-    `).join("");
+        </div>`;
+    }).join("");
   }
 
-  function filterRecords() {
-    renderRecords(allRecords);
-  }
+  function filterRecords() { renderRecords(allRecords); }
+  function changePageSize() { loadRecords(0); }
 
-  function changePageSize() {
-    loadRecords(0);
-  }
-
-  function renderPagination(page, pages, limit) {
+  function renderPagination(page, pages) {
     const pag = document.getElementById("pagination");
     if (pages <= 1) { pag.style.display = "none"; return; }
 
     pag.style.display = "flex";
 
-    let html = `
-      <button class="page-btn" onclick="loadRecords(${page - 1})" ${page === 0 ? "disabled" : ""}>← Prev</button>
-    `;
+    let html = `<button class="page-btn" onclick="loadRecords(${page-1})" ${page===0?"disabled":""}>← Prev</button>`;
 
-    // Show up to 5 page buttons centered around current
     const start = Math.max(0, page - 2);
     const end   = Math.min(pages - 1, page + 2);
 
@@ -944,25 +1491,98 @@ function fallbackCopy(text, btn) {
     if (start > 1) html += `<span class="page-info">…</span>`;
 
     for (let i = start; i <= end; i++) {
-      html += `<button class="page-btn ${i === page ? "active" : ""}" onclick="loadRecords(${i})">${i + 1}</button>`;
+      html += `<button class="page-btn ${i===page?"active":""}" onclick="loadRecords(${i})">${i+1}</button>`;
     }
 
     if (end < pages - 2) html += `<span class="page-info">…</span>`;
-    if (end < pages - 1) html += `<button class="page-btn" onclick="loadRecords(${pages - 1})">${pages}</button>`;
+    if (end < pages - 1) html += `<button class="page-btn" onclick="loadRecords(${pages-1})">${pages}</button>`;
 
     html += `
-      <button class="page-btn" onclick="loadRecords(${page + 1})" ${page >= pages - 1 ? "disabled" : ""}>Next →</button>
-      <span class="page-info">${totalRecords} total</span>
-    `;
+      <button class="page-btn" onclick="loadRecords(${page+1})" ${page>=pages-1?"disabled":""}>Next →</button>
+      <span class="page-info">${totalRecords} total</span>`;
 
     pag.innerHTML = html;
   }
 
-  // ── Init ───────────────────────────────────────────────────────────────────
+  // ── Precompile tester ─────────────────────────────────────────────────────
 
-window.onload = () => {
+  async function testEncode() {
+    const data   = document.getElementById("encodeInput").value.trim();
+    const dS     = parseInt(document.getElementById("encDataShards").value)   || 10;
+    const pS     = parseInt(document.getElementById("encParityShards").value) || 4;
+
+    if (!data) { setResult("encodeResult", "⚠ Enter hex data.", "err"); return; }
+
+    setLoading("encodeBtn", true, "Encoding...");
+    setResult("encodeResult", "Calling precompile bridge...", "");
+
+    try {
+      const res = await fetch(`${SVC()}/encode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data, dataShards: dS, parityShards: pS })
+      });
+
+      if (!res.ok) {
+        const j = await res.json();
+        setResult("encodeResult", `❌ ${escapeHtml(j.error || res.statusText)}`, "err");
+        return;
+      }
+
+      const buf  = await res.arrayBuffer();
+      const hex  = "0x" + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+      document.getElementById("decodeInput").value = hex;
+
+      setResult("encodeResult",
+        `✅ Encoded!\nInput:  ${data.length} chars\nOutput: ${hex.length} chars\nData: ${hex.slice(0,80)}...`,
+        "ok"
+      );
+    } catch (err) {
+      setResult("encodeResult", `❌ ${escapeHtml(err.message)}`, "err");
+    } finally {
+      setLoading("encodeBtn", false, "Run Encode Precompile");
+    }
+  }
+
+  async function testDecode() {
+    const data = document.getElementById("decodeInput").value.trim();
+    const dS   = parseInt(document.getElementById("decDataShards").value)   || 10;
+    const pS   = parseInt(document.getElementById("decParityShards").value) || 4;
+
+    if (!data) { setResult("decodeResult", "⚠ Enter encoded hex data.", "err"); return; }
+
+    setLoading("decodeBtn", true, "Decoding...");
+    setResult("decodeResult", "Calling precompile bridge...", "");
+
+    try {
+      const res = await fetch(`${SVC()}/decode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ encoded: data, dataShards: dS, parityShards: pS })
+      });
+
+      if (!res.ok) {
+        const j = await res.json();
+        setResult("decodeResult", `❌ ${escapeHtml(j.error || res.statusText)}`, "err");
+        return;
+      }
+
+      const buf  = await res.arrayBuffer();
+      const text = new TextDecoder().decode(buf);
+      setResult("decodeResult", `✅ Decoded!\nText: ${escapeHtml(text)}\nBytes: ${buf.byteLength}`, "ok");
+    } catch (err) {
+      setResult("decodeResult", `❌ ${escapeHtml(err.message)}`, "err");
+    } finally {
+      setLoading("decodeBtn", false, "Run Decode Precompile");
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+
+  window.onload = () => {
     initTheme();
-    initNetwork();
+    updateNetworkUI();
+    validateLabel();
     checkStatus();
     loadRecords(0);
     setInterval(checkStatus, 15000);

@@ -52,6 +52,12 @@ API_KEYS=
 EOF
 success ".env written (contract address will be updated after deploy)"
 
+# Ensure oracle state file exists with correct permissions
+if [ ! -f "$PROJECT_DIR/oracle-state.json" ]; then
+  echo '{"lastProcessedBlock":0}' > "$PROJECT_DIR/oracle-state.json"
+fi
+chmod 666 "$PROJECT_DIR/oracle-state.json"
+
 # ── 2. Bring down any existing stack ─────────────────────────────────────────
 log "Stopping existing containers..."
 docker compose down 2>/dev/null || true
