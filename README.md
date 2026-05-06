@@ -54,11 +54,12 @@ HealChain is deployed and operational on Ethereum Sepolia testnet.
 
 | | |
 |---|---|
-| **Contract** | `0xBffb39930647DBB5971690ea6e9F0CF393307e64` |
+| **Contract** | `0x0f7f9383242bD27d735F5f562c4A9Ebc940C4e5b` |
 | **Network** | Ethereum Sepolia (Chain ID: 11155111) |
 | **Oracle** | `0x96243925D8588E332d8ff54c71936Ca2dC5f2aE2` |
-| **Explorer** | [View on Etherscan](https://sepolia.etherscan.io/address/0xBffb39930647DBB5971690ea6e9F0CF393307e64) |
-| **Verified Source** | [View Contract Code](https://sepolia.etherscan.io/address/0xBffb39930647DBB5971690ea6e9F0CF393307e64#code) ✅ |
+| **Explorer** | [View on Etherscan](https://sepolia.etherscan.io/address/0x0f7f9383242bD27d735F5f562c4A9Ebc940C4e5b) |
+| **Verified Source** | [View Contract Code](https://sepolia.etherscan.io/address/0x0f7f9383242bD27d735F5f562c4A9Ebc940C4e5b#code) ✅ |
+| **Oracle Model** | Multi-oracle whitelist — add oracles via `addOracle()` |
 
 ### Store data on Sepolia
 
@@ -236,17 +237,29 @@ Default configuration: **10 data shards + 4 parity shards** (tolerates up to 4 s
 
 ## Roadmap
 
+### Completed ✅
+- [x] Public testnet deployment (Sepolia) — oracle pattern
+- [x] Multi-oracle whitelist — `addOracle/removeOracle/getOracles` on contract
+- [x] New contract deployed and verified: `0x0f7f9383242bD27d735F5f562c4A9Ebc940C4e5b`
+- [x] API key authentication middleware (enable via `API_KEYS` env var)
+- [x] Data compression before RS encoding (gzip, 80% reduction on repetitive data)
+- [x] Oracle robustness — confirmations, state persistence, duplicate protection
+- [x] Network switcher (Devnet / Sepolia) in browser UI
+- [x] Sepolia async store flow with live oracle polling in UI
+- [x] Precompile tester (devnet only)
+- [x] Shard & parity controls in UI
+- [x] Contract verification on Etherscan
+
 ### Near-term
-- [x] Public testnet deployment (Sepolia) — oracle pattern, live at `0xBffb39930647DBB5971690ea6e9F0CF393307e64`
-- [ ] API key authentication
-- [ ] Data compression before RS encoding
 - [ ] Monitoring dashboard
+- [ ] Rate limiting and abuse protection
+- [ ] `/storeOnChain` routing improvements (better Sepolia UX)
+- [ ] Run oracle on a second machine for true redundancy
 
 ### Medium-term
 - [ ] IPFS-hosted frontend
 - [ ] WalletConnect integration
 - [ ] Cross-chain shard distribution
-- [ ] Rate limiting and abuse protection
 
 ### Long-term
 - [ ] Community governance
