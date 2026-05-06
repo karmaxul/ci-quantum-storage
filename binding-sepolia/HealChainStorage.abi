@@ -3,12 +3,44 @@
     "type": "constructor",
     "inputs": [
       {
-        "name": "_oracle",
+        "name": "initialOracles",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "addOracle",
+    "inputs": [
+      {
+        "name": "oracle",
         "type": "address",
         "internalType": "address"
       }
     ],
+    "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "approvedOracles",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -114,12 +146,25 @@
   },
   {
     "type": "function",
-    "name": "isPending",
+    "name": "getOracles",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isOracle",
     "inputs": [
       {
-        "name": "requestId",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "addr",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [
@@ -133,13 +178,19 @@
   },
   {
     "type": "function",
-    "name": "oracle",
-    "inputs": [],
+    "name": "isPending",
+    "inputs": [
+      {
+        "name": "requestId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [
       {
         "name": "",
-        "type": "address",
-        "internalType": "address"
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -172,10 +223,10 @@
   },
   {
     "type": "function",
-    "name": "setOracle",
+    "name": "removeOracle",
     "inputs": [
       {
-        "name": "newOracle",
+        "name": "oracle",
         "type": "address",
         "internalType": "address"
       }
@@ -299,16 +350,23 @@
   },
   {
     "type": "event",
-    "name": "OracleUpdated",
+    "name": "OracleAdded",
     "inputs": [
       {
-        "name": "oldOracle",
+        "name": "oracle",
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      },
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OracleRemoved",
+    "inputs": [
       {
-        "name": "newOracle",
+        "name": "oracle",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -331,56 +389,6 @@
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "RetrieveRequested",
-    "inputs": [
-      {
-        "name": "requestId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "recordId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "requester",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Retrieved",
-    "inputs": [
-      {
-        "name": "recordId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "caller",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "verified",
-        "type": "bool",
-        "indexed": false,
-        "internalType": "bool"
       }
     ],
     "anonymous": false
@@ -456,18 +464,29 @@
   },
   {
     "type": "error",
-    "name": "RecordNotFound",
+    "name": "OracleAlreadyApproved",
     "inputs": [
       {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "oracle",
+        "type": "address",
+        "internalType": "address"
       }
     ]
   },
   {
     "type": "error",
-    "name": "RecordNotFulfilled",
+    "name": "OracleNotApproved",
+    "inputs": [
+      {
+        "name": "oracle",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "RecordNotFound",
     "inputs": [
       {
         "name": "id",
@@ -484,27 +503,6 @@
         "name": "requestId",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "VerificationFailed",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "expected",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "got",
-        "type": "bytes32",
-        "internalType": "bytes32"
       }
     ]
   }

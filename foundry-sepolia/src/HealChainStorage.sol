@@ -2,22 +2,27 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title HealChainStorage (Oracle Version)
- * @notice Store data on-chain using Reed-Solomon encoding via an off-chain oracle.
+ * @title HealChainStorage (Multi-Oracle Version)
+ * @notice Store data on-chain using Reed-Solomon encoding via an off-chain oracle network.
  *
  * Flow:
  *   1. User calls store(data, label)
  *   2. Contract emits EncodeRequested event with requestId + raw data
- *   3. Oracle (HealChain Go service) picks up event
+ *   3. Any approved oracle picks up the event
  *   4. Oracle RS-encodes data off-chain
- *   5. Oracle calls fulfillStore(requestId, encodedData)
+ *   5. First oracle to call fulfillStore(requestId, encodedData) wins
  *   6. Contract stores encoded shards and emits Stored event
- *   7. User calls retrieve(id) — oracle watches and calls fulfillRetrieve
  *
  * Security:
- *   - Only the designated oracle address can call fulfill functions
- *   - Owner can rotate oracle address
+ *   - Only approved oracle addresses can call fulfill functions
+ *   - Owner can add/remove oracles via addOracle/removeOracle
+ *   - isPending check prevents duplicate fulfillment
  *   - Records can only be deleted by their original owner
+ *
+ * Multi-oracle design:
+ *   - Multiple oracles watch the same contract
+ *   - First to fulfill wins, others detect isPending=false and skip
+ *   - No gas wasted on failed duplicate attempts
  */
 contract HealChainStorage {
 
@@ -47,7 +52,10 @@ contract HealChainStorage {
     // ── Storage ───────────────────────────────────────────────────────────────
 
     address public owner;
-    address public oracle;
+
+    // Oracle whitelist — any approved address can fulfill requests
+    mapping(address => bool) public approvedOracles;
+    address[] private _oracleList; // for enumeration
 
     mapping(uint256 => Record)         private _records;
     mapping(uint256 => PendingRequest) private _pending;
@@ -57,7 +65,6 @@ contract HealChainStorage {
 
     // ── Events ────────────────────────────────────────────────────────────────
 
-    // Emitted when a user requests storage — oracle listens for this
     event EncodeRequested(
         uint256 indexed requestId,
         address indexed requester,
@@ -67,7 +74,6 @@ contract HealChainStorage {
         string          label
     );
 
-    // Emitted when oracle fulfills encoding and data is stored
     event Stored(
         uint256 indexed id,
         address indexed owner,
@@ -77,22 +83,10 @@ contract HealChainStorage {
         string          label
     );
 
-    // Emitted when a retrieve is requested — oracle listens for this
-    event RetrieveRequested(
-        uint256 indexed requestId,
-        uint256 indexed recordId,
-        address indexed requester
-    );
-
-    // Emitted when oracle fulfills decode
-    event Retrieved(
-        uint256 indexed recordId,
-        address indexed caller,
-        bool            verified
-    );
-
     event RecordDeleted(uint256 indexed id, address indexed owner);
-    event OracleUpdated(address indexed oldOracle, address indexed newOracle);
+
+    event OracleAdded(address indexed oracle);
+    event OracleRemoved(address indexed oracle);
 
     // ── Errors ────────────────────────────────────────────────────────────────
 
@@ -101,14 +95,14 @@ contract HealChainStorage {
     error NotContractOwner();
     error RecordNotFound(uint256 id);
     error RequestNotFound(uint256 requestId);
-    error RecordNotFulfilled(uint256 id);
-    error VerificationFailed(uint256 id, bytes32 expected, bytes32 got);
     error EmptyData();
+    error OracleAlreadyApproved(address oracle);
+    error OracleNotApproved(address oracle);
 
     // ── Modifiers ─────────────────────────────────────────────────────────────
 
     modifier onlyOracle() {
-        if (msg.sender != oracle) revert NotOracle();
+        if (!approvedOracles[msg.sender]) revert NotOracle();
         _;
     }
 
@@ -119,17 +113,21 @@ contract HealChainStorage {
 
     // ── Constructor ───────────────────────────────────────────────────────────
 
-    constructor(address _oracle) {
-        owner  = msg.sender;
-        oracle = _oracle;
+    /**
+     * @param initialOracles  Array of oracle addresses to approve at deploy time.
+     *                        Pass an empty array to add oracles later via addOracle().
+     */
+    constructor(address[] memory initialOracles) {
+        owner = msg.sender;
+        for (uint256 i = 0; i < initialOracles.length; i++) {
+            _addOracle(initialOracles[i]);
+        }
     }
 
     // ── User functions ────────────────────────────────────────────────────────
 
     /**
      * @notice Request storage with custom shard config.
-     *         Emits EncodeRequested — oracle will fulfill async.
-     * @return requestId  Track this to know when your data is stored.
      */
     function store(
         bytes calldata data,
@@ -191,9 +189,8 @@ contract HealChainStorage {
     // ── Oracle functions ──────────────────────────────────────────────────────
 
     /**
-     * @notice Oracle calls this after RS-encoding the requested data.
-     * @param requestId   The request ID from EncodeRequested event.
-     * @param encoded     RS-encoded shard blob.
+     * @notice Any approved oracle calls this after RS-encoding the data.
+     *         First oracle to call wins. Others will see isPending=false and skip.
      */
     function fulfillStore(
         uint256 requestId,
@@ -231,9 +228,6 @@ contract HealChainStorage {
 
     // ── View functions ────────────────────────────────────────────────────────
 
-    /**
-     * @notice Return record metadata without decoding.
-     */
     function getMetadata(uint256 id) external view returns (
         bytes32 dataHash,
         uint256 originalSize,
@@ -261,36 +255,68 @@ contract HealChainStorage {
         );
     }
 
-    /**
-     * @notice Return the raw encoded shard blob.
-     */
     function getEncoded(uint256 id) external view returns (bytes memory) {
         Record storage rec = _records[id];
         if (rec.owner == address(0)) revert RecordNotFound(id);
         return rec.encoded;
     }
 
-    /**
-     * @notice Total records ever created.
-     */
     function totalRecords() external view returns (uint256) {
         return _nextId;
     }
 
-    /**
-     * @notice Check if a pending request exists.
-     */
     function isPending(uint256 requestId) external view returns (bool) {
         return _pending[requestId].exists;
+    }
+
+    /**
+     * @notice Returns all currently approved oracle addresses.
+     */
+    function getOracles() external view returns (address[] memory) {
+        return _oracleList;
+    }
+
+    /**
+     * @notice Check if an address is an approved oracle.
+     */
+    function isOracle(address addr) external view returns (bool) {
+        return approvedOracles[addr];
     }
 
     // ── Admin functions ───────────────────────────────────────────────────────
 
     /**
-     * @notice Rotate the oracle address.
+     * @notice Add an oracle to the approved list.
      */
-    function setOracle(address newOracle) external onlyContractOwner {
-        emit OracleUpdated(oracle, newOracle);
-        oracle = newOracle;
+    function addOracle(address oracle) external onlyContractOwner {
+        if (approvedOracles[oracle]) revert OracleAlreadyApproved(oracle);
+        _addOracle(oracle);
+    }
+
+    /**
+     * @notice Remove an oracle from the approved list.
+     */
+    function removeOracle(address oracle) external onlyContractOwner {
+        if (!approvedOracles[oracle]) revert OracleNotApproved(oracle);
+        approvedOracles[oracle] = false;
+
+        // Remove from list
+        for (uint256 i = 0; i < _oracleList.length; i++) {
+            if (_oracleList[i] == oracle) {
+                _oracleList[i] = _oracleList[_oracleList.length - 1];
+                _oracleList.pop();
+                break;
+            }
+        }
+
+        emit OracleRemoved(oracle);
+    }
+
+    // ── Internal ──────────────────────────────────────────────────────────────
+
+    function _addOracle(address oracle) internal {
+        approvedOracles[oracle] = true;
+        _oracleList.push(oracle);
+        emit OracleAdded(oracle);
     }
 }

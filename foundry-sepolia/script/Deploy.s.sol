@@ -9,15 +9,19 @@ contract Deploy is Script {
         // Oracle address — the wallet that will fulfill RS requests
         // This should be the address corresponding to STORE_PRIVATE_KEY
         // in your healchain-service configuration
-        address oracle = vm.envAddress("ORACLE_ADDRESS");
+        address oracle1 = vm.envAddress("ORACLE_ADDRESS");
+
+        address[] memory initialOracles = new address[](1);
+        initialOracles[0] = oracle1;
 
         vm.startBroadcast();
 
-        HealChainStorage store = new HealChainStorage(oracle);
+        HealChainStorage store = new HealChainStorage(initialOracles);
 
-        console.log("HealChainStorage deployed at:", address(store));
-        console.log("Oracle address:", oracle);
+        console.log("HealChainStorage (multi-oracle) deployed at:", address(store));
+        console.log("Initial oracle:", oracle1);
         console.log("Chain ID:", block.chainid);
+        console.log("Owner:", msg.sender);
 
         vm.stopBroadcast();
     }

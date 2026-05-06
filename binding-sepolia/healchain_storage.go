@@ -31,7 +31,7 @@ var (
 
 // HealChainStorageMetaData contains all meta data concerning the HealChainStorage contract.
 var HealChainStorageMetaData = &bind.MetaData{
-	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"_oracle\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"fulfillStore\",\"inputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"encoded\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"recordId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"getEncoded\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMetadata\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"dataHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"originalSize\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"encodedSize\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"dataShards\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"parityShards\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"recordOwner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"label\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"fulfilled\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"isPending\",\"inputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"oracle\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"remove\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"setOracle\",\"inputs\":[{\"name\":\"newOracle\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"store\",\"inputs\":[{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"dataShards\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"parityShards\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"label\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"store\",\"inputs\":[{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"label\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"totalRecords\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"EncodeRequested\",\"inputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"requester\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"data\",\"type\":\"bytes\",\"indexed\":false,\"internalType\":\"bytes\"},{\"name\":\"dataShards\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"},{\"name\":\"parityShards\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"},{\"name\":\"label\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OracleUpdated\",\"inputs\":[{\"name\":\"oldOracle\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"newOracle\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RecordDeleted\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"owner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RetrieveRequested\",\"inputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"recordId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"requester\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Retrieved\",\"inputs\":[{\"name\":\"recordId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"caller\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"verified\",\"type\":\"bool\",\"indexed\":false,\"internalType\":\"bool\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Stored\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"owner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"dataHash\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"originalSize\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"encodedSize\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"label\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"EmptyData\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotContractOwner\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotOracle\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotOwner\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"RecordNotFound\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"RecordNotFulfilled\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"RequestNotFound\",\"inputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"VerificationFailed\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"expected\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"got\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"}]}]",
+	ABI: "[{\"type\":\"constructor\",\"inputs\":[{\"name\":\"initialOracles\",\"type\":\"address[]\",\"internalType\":\"address[]\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"addOracle\",\"inputs\":[{\"name\":\"oracle\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"approvedOracles\",\"inputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"fulfillStore\",\"inputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"encoded\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"outputs\":[{\"name\":\"recordId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"getEncoded\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bytes\",\"internalType\":\"bytes\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getMetadata\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"dataHash\",\"type\":\"bytes32\",\"internalType\":\"bytes32\"},{\"name\":\"originalSize\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"encodedSize\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"dataShards\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"parityShards\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"recordOwner\",\"type\":\"address\",\"internalType\":\"address\"},{\"name\":\"timestamp\",\"type\":\"uint256\",\"internalType\":\"uint256\"},{\"name\":\"label\",\"type\":\"string\",\"internalType\":\"string\"},{\"name\":\"fulfilled\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"getOracles\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address[]\",\"internalType\":\"address[]\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"isOracle\",\"inputs\":[{\"name\":\"addr\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"isPending\",\"inputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[{\"name\":\"\",\"type\":\"bool\",\"internalType\":\"bool\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"owner\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"address\",\"internalType\":\"address\"}],\"stateMutability\":\"view\"},{\"type\":\"function\",\"name\":\"remove\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"removeOracle\",\"inputs\":[{\"name\":\"oracle\",\"type\":\"address\",\"internalType\":\"address\"}],\"outputs\":[],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"store\",\"inputs\":[{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"dataShards\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"parityShards\",\"type\":\"uint8\",\"internalType\":\"uint8\"},{\"name\":\"label\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"store\",\"inputs\":[{\"name\":\"data\",\"type\":\"bytes\",\"internalType\":\"bytes\"},{\"name\":\"label\",\"type\":\"string\",\"internalType\":\"string\"}],\"outputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"nonpayable\"},{\"type\":\"function\",\"name\":\"totalRecords\",\"inputs\":[],\"outputs\":[{\"name\":\"\",\"type\":\"uint256\",\"internalType\":\"uint256\"}],\"stateMutability\":\"view\"},{\"type\":\"event\",\"name\":\"EncodeRequested\",\"inputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"requester\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"data\",\"type\":\"bytes\",\"indexed\":false,\"internalType\":\"bytes\"},{\"name\":\"dataShards\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"},{\"name\":\"parityShards\",\"type\":\"uint8\",\"indexed\":false,\"internalType\":\"uint8\"},{\"name\":\"label\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OracleAdded\",\"inputs\":[{\"name\":\"oracle\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"OracleRemoved\",\"inputs\":[{\"name\":\"oracle\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"RecordDeleted\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"owner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"}],\"anonymous\":false},{\"type\":\"event\",\"name\":\"Stored\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"indexed\":true,\"internalType\":\"uint256\"},{\"name\":\"owner\",\"type\":\"address\",\"indexed\":true,\"internalType\":\"address\"},{\"name\":\"dataHash\",\"type\":\"bytes32\",\"indexed\":false,\"internalType\":\"bytes32\"},{\"name\":\"originalSize\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"encodedSize\",\"type\":\"uint256\",\"indexed\":false,\"internalType\":\"uint256\"},{\"name\":\"label\",\"type\":\"string\",\"indexed\":false,\"internalType\":\"string\"}],\"anonymous\":false},{\"type\":\"error\",\"name\":\"EmptyData\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotContractOwner\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotOracle\",\"inputs\":[]},{\"type\":\"error\",\"name\":\"NotOwner\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"OracleAlreadyApproved\",\"inputs\":[{\"name\":\"oracle\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"OracleNotApproved\",\"inputs\":[{\"name\":\"oracle\",\"type\":\"address\",\"internalType\":\"address\"}]},{\"type\":\"error\",\"name\":\"RecordNotFound\",\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]},{\"type\":\"error\",\"name\":\"RequestNotFound\",\"inputs\":[{\"name\":\"requestId\",\"type\":\"uint256\",\"internalType\":\"uint256\"}]}]",
 }
 
 // HealChainStorageABI is the input ABI used to generate the binding from.
@@ -180,6 +180,37 @@ func (_HealChainStorage *HealChainStorageTransactorRaw) Transact(opts *bind.Tran
 	return _HealChainStorage.Contract.contract.Transact(opts, method, params...)
 }
 
+// ApprovedOracles is a free data retrieval call binding the contract method 0x2a03fdc9.
+//
+// Solidity: function approvedOracles(address ) view returns(bool)
+func (_HealChainStorage *HealChainStorageCaller) ApprovedOracles(opts *bind.CallOpts, arg0 common.Address) (bool, error) {
+	var out []interface{}
+	err := _HealChainStorage.contract.Call(opts, &out, "approvedOracles", arg0)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// ApprovedOracles is a free data retrieval call binding the contract method 0x2a03fdc9.
+//
+// Solidity: function approvedOracles(address ) view returns(bool)
+func (_HealChainStorage *HealChainStorageSession) ApprovedOracles(arg0 common.Address) (bool, error) {
+	return _HealChainStorage.Contract.ApprovedOracles(&_HealChainStorage.CallOpts, arg0)
+}
+
+// ApprovedOracles is a free data retrieval call binding the contract method 0x2a03fdc9.
+//
+// Solidity: function approvedOracles(address ) view returns(bool)
+func (_HealChainStorage *HealChainStorageCallerSession) ApprovedOracles(arg0 common.Address) (bool, error) {
+	return _HealChainStorage.Contract.ApprovedOracles(&_HealChainStorage.CallOpts, arg0)
+}
+
 // GetEncoded is a free data retrieval call binding the contract method 0xfe2feafe.
 //
 // Solidity: function getEncoded(uint256 id) view returns(bytes)
@@ -291,6 +322,68 @@ func (_HealChainStorage *HealChainStorageCallerSession) GetMetadata(id *big.Int)
 	return _HealChainStorage.Contract.GetMetadata(&_HealChainStorage.CallOpts, id)
 }
 
+// GetOracles is a free data retrieval call binding the contract method 0x40884c52.
+//
+// Solidity: function getOracles() view returns(address[])
+func (_HealChainStorage *HealChainStorageCaller) GetOracles(opts *bind.CallOpts) ([]common.Address, error) {
+	var out []interface{}
+	err := _HealChainStorage.contract.Call(opts, &out, "getOracles")
+
+	if err != nil {
+		return *new([]common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
+
+	return out0, err
+
+}
+
+// GetOracles is a free data retrieval call binding the contract method 0x40884c52.
+//
+// Solidity: function getOracles() view returns(address[])
+func (_HealChainStorage *HealChainStorageSession) GetOracles() ([]common.Address, error) {
+	return _HealChainStorage.Contract.GetOracles(&_HealChainStorage.CallOpts)
+}
+
+// GetOracles is a free data retrieval call binding the contract method 0x40884c52.
+//
+// Solidity: function getOracles() view returns(address[])
+func (_HealChainStorage *HealChainStorageCallerSession) GetOracles() ([]common.Address, error) {
+	return _HealChainStorage.Contract.GetOracles(&_HealChainStorage.CallOpts)
+}
+
+// IsOracle is a free data retrieval call binding the contract method 0xa97e5c93.
+//
+// Solidity: function isOracle(address addr) view returns(bool)
+func (_HealChainStorage *HealChainStorageCaller) IsOracle(opts *bind.CallOpts, addr common.Address) (bool, error) {
+	var out []interface{}
+	err := _HealChainStorage.contract.Call(opts, &out, "isOracle", addr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// IsOracle is a free data retrieval call binding the contract method 0xa97e5c93.
+//
+// Solidity: function isOracle(address addr) view returns(bool)
+func (_HealChainStorage *HealChainStorageSession) IsOracle(addr common.Address) (bool, error) {
+	return _HealChainStorage.Contract.IsOracle(&_HealChainStorage.CallOpts, addr)
+}
+
+// IsOracle is a free data retrieval call binding the contract method 0xa97e5c93.
+//
+// Solidity: function isOracle(address addr) view returns(bool)
+func (_HealChainStorage *HealChainStorageCallerSession) IsOracle(addr common.Address) (bool, error) {
+	return _HealChainStorage.Contract.IsOracle(&_HealChainStorage.CallOpts, addr)
+}
+
 // IsPending is a free data retrieval call binding the contract method 0xca8836d2.
 //
 // Solidity: function isPending(uint256 requestId) view returns(bool)
@@ -320,37 +413,6 @@ func (_HealChainStorage *HealChainStorageSession) IsPending(requestId *big.Int) 
 // Solidity: function isPending(uint256 requestId) view returns(bool)
 func (_HealChainStorage *HealChainStorageCallerSession) IsPending(requestId *big.Int) (bool, error) {
 	return _HealChainStorage.Contract.IsPending(&_HealChainStorage.CallOpts, requestId)
-}
-
-// Oracle is a free data retrieval call binding the contract method 0x7dc0d1d0.
-//
-// Solidity: function oracle() view returns(address)
-func (_HealChainStorage *HealChainStorageCaller) Oracle(opts *bind.CallOpts) (common.Address, error) {
-	var out []interface{}
-	err := _HealChainStorage.contract.Call(opts, &out, "oracle")
-
-	if err != nil {
-		return *new(common.Address), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-
-	return out0, err
-
-}
-
-// Oracle is a free data retrieval call binding the contract method 0x7dc0d1d0.
-//
-// Solidity: function oracle() view returns(address)
-func (_HealChainStorage *HealChainStorageSession) Oracle() (common.Address, error) {
-	return _HealChainStorage.Contract.Oracle(&_HealChainStorage.CallOpts)
-}
-
-// Oracle is a free data retrieval call binding the contract method 0x7dc0d1d0.
-//
-// Solidity: function oracle() view returns(address)
-func (_HealChainStorage *HealChainStorageCallerSession) Oracle() (common.Address, error) {
-	return _HealChainStorage.Contract.Oracle(&_HealChainStorage.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -415,6 +477,27 @@ func (_HealChainStorage *HealChainStorageCallerSession) TotalRecords() (*big.Int
 	return _HealChainStorage.Contract.TotalRecords(&_HealChainStorage.CallOpts)
 }
 
+// AddOracle is a paid mutator transaction binding the contract method 0xdf5dd1a5.
+//
+// Solidity: function addOracle(address oracle) returns()
+func (_HealChainStorage *HealChainStorageTransactor) AddOracle(opts *bind.TransactOpts, oracle common.Address) (*types.Transaction, error) {
+	return _HealChainStorage.contract.Transact(opts, "addOracle", oracle)
+}
+
+// AddOracle is a paid mutator transaction binding the contract method 0xdf5dd1a5.
+//
+// Solidity: function addOracle(address oracle) returns()
+func (_HealChainStorage *HealChainStorageSession) AddOracle(oracle common.Address) (*types.Transaction, error) {
+	return _HealChainStorage.Contract.AddOracle(&_HealChainStorage.TransactOpts, oracle)
+}
+
+// AddOracle is a paid mutator transaction binding the contract method 0xdf5dd1a5.
+//
+// Solidity: function addOracle(address oracle) returns()
+func (_HealChainStorage *HealChainStorageTransactorSession) AddOracle(oracle common.Address) (*types.Transaction, error) {
+	return _HealChainStorage.Contract.AddOracle(&_HealChainStorage.TransactOpts, oracle)
+}
+
 // FulfillStore is a paid mutator transaction binding the contract method 0xbb37740e.
 //
 // Solidity: function fulfillStore(uint256 requestId, bytes encoded) returns(uint256 recordId)
@@ -457,25 +540,25 @@ func (_HealChainStorage *HealChainStorageTransactorSession) Remove(id *big.Int) 
 	return _HealChainStorage.Contract.Remove(&_HealChainStorage.TransactOpts, id)
 }
 
-// SetOracle is a paid mutator transaction binding the contract method 0x7adbf973.
+// RemoveOracle is a paid mutator transaction binding the contract method 0xfdc85fc4.
 //
-// Solidity: function setOracle(address newOracle) returns()
-func (_HealChainStorage *HealChainStorageTransactor) SetOracle(opts *bind.TransactOpts, newOracle common.Address) (*types.Transaction, error) {
-	return _HealChainStorage.contract.Transact(opts, "setOracle", newOracle)
+// Solidity: function removeOracle(address oracle) returns()
+func (_HealChainStorage *HealChainStorageTransactor) RemoveOracle(opts *bind.TransactOpts, oracle common.Address) (*types.Transaction, error) {
+	return _HealChainStorage.contract.Transact(opts, "removeOracle", oracle)
 }
 
-// SetOracle is a paid mutator transaction binding the contract method 0x7adbf973.
+// RemoveOracle is a paid mutator transaction binding the contract method 0xfdc85fc4.
 //
-// Solidity: function setOracle(address newOracle) returns()
-func (_HealChainStorage *HealChainStorageSession) SetOracle(newOracle common.Address) (*types.Transaction, error) {
-	return _HealChainStorage.Contract.SetOracle(&_HealChainStorage.TransactOpts, newOracle)
+// Solidity: function removeOracle(address oracle) returns()
+func (_HealChainStorage *HealChainStorageSession) RemoveOracle(oracle common.Address) (*types.Transaction, error) {
+	return _HealChainStorage.Contract.RemoveOracle(&_HealChainStorage.TransactOpts, oracle)
 }
 
-// SetOracle is a paid mutator transaction binding the contract method 0x7adbf973.
+// RemoveOracle is a paid mutator transaction binding the contract method 0xfdc85fc4.
 //
-// Solidity: function setOracle(address newOracle) returns()
-func (_HealChainStorage *HealChainStorageTransactorSession) SetOracle(newOracle common.Address) (*types.Transaction, error) {
-	return _HealChainStorage.Contract.SetOracle(&_HealChainStorage.TransactOpts, newOracle)
+// Solidity: function removeOracle(address oracle) returns()
+func (_HealChainStorage *HealChainStorageTransactorSession) RemoveOracle(oracle common.Address) (*types.Transaction, error) {
+	return _HealChainStorage.Contract.RemoveOracle(&_HealChainStorage.TransactOpts, oracle)
 }
 
 // Store is a paid mutator transaction binding the contract method 0x46bd680e.
@@ -677,9 +760,9 @@ func (_HealChainStorage *HealChainStorageFilterer) ParseEncodeRequested(log type
 	return event, nil
 }
 
-// HealChainStorageOracleUpdatedIterator is returned from FilterOracleUpdated and is used to iterate over the raw logs and unpacked data for OracleUpdated events raised by the HealChainStorage contract.
-type HealChainStorageOracleUpdatedIterator struct {
-	Event *HealChainStorageOracleUpdated // Event containing the contract specifics and raw log
+// HealChainStorageOracleAddedIterator is returned from FilterOracleAdded and is used to iterate over the raw logs and unpacked data for OracleAdded events raised by the HealChainStorage contract.
+type HealChainStorageOracleAddedIterator struct {
+	Event *HealChainStorageOracleAdded // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -693,7 +776,7 @@ type HealChainStorageOracleUpdatedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *HealChainStorageOracleUpdatedIterator) Next() bool {
+func (it *HealChainStorageOracleAddedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -702,7 +785,7 @@ func (it *HealChainStorageOracleUpdatedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(HealChainStorageOracleUpdated)
+			it.Event = new(HealChainStorageOracleAdded)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -717,7 +800,7 @@ func (it *HealChainStorageOracleUpdatedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(HealChainStorageOracleUpdated)
+		it.Event = new(HealChainStorageOracleAdded)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -733,60 +816,51 @@ func (it *HealChainStorageOracleUpdatedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *HealChainStorageOracleUpdatedIterator) Error() error {
+func (it *HealChainStorageOracleAddedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *HealChainStorageOracleUpdatedIterator) Close() error {
+func (it *HealChainStorageOracleAddedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// HealChainStorageOracleUpdated represents a OracleUpdated event raised by the HealChainStorage contract.
-type HealChainStorageOracleUpdated struct {
-	OldOracle common.Address
-	NewOracle common.Address
-	Raw       types.Log // Blockchain specific contextual infos
+// HealChainStorageOracleAdded represents a OracleAdded event raised by the HealChainStorage contract.
+type HealChainStorageOracleAdded struct {
+	Oracle common.Address
+	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterOracleUpdated is a free log retrieval operation binding the contract event 0x078c3b417dadf69374a59793b829c52001247130433427049317bde56607b1b7.
+// FilterOracleAdded is a free log retrieval operation binding the contract event 0x0047706786c922d17b39285dc59d696bafea72c0b003d3841ae1202076f4c2e4.
 //
-// Solidity: event OracleUpdated(address indexed oldOracle, address indexed newOracle)
-func (_HealChainStorage *HealChainStorageFilterer) FilterOracleUpdated(opts *bind.FilterOpts, oldOracle []common.Address, newOracle []common.Address) (*HealChainStorageOracleUpdatedIterator, error) {
+// Solidity: event OracleAdded(address indexed oracle)
+func (_HealChainStorage *HealChainStorageFilterer) FilterOracleAdded(opts *bind.FilterOpts, oracle []common.Address) (*HealChainStorageOracleAddedIterator, error) {
 
-	var oldOracleRule []interface{}
-	for _, oldOracleItem := range oldOracle {
-		oldOracleRule = append(oldOracleRule, oldOracleItem)
-	}
-	var newOracleRule []interface{}
-	for _, newOracleItem := range newOracle {
-		newOracleRule = append(newOracleRule, newOracleItem)
+	var oracleRule []interface{}
+	for _, oracleItem := range oracle {
+		oracleRule = append(oracleRule, oracleItem)
 	}
 
-	logs, sub, err := _HealChainStorage.contract.FilterLogs(opts, "OracleUpdated", oldOracleRule, newOracleRule)
+	logs, sub, err := _HealChainStorage.contract.FilterLogs(opts, "OracleAdded", oracleRule)
 	if err != nil {
 		return nil, err
 	}
-	return &HealChainStorageOracleUpdatedIterator{contract: _HealChainStorage.contract, event: "OracleUpdated", logs: logs, sub: sub}, nil
+	return &HealChainStorageOracleAddedIterator{contract: _HealChainStorage.contract, event: "OracleAdded", logs: logs, sub: sub}, nil
 }
 
-// WatchOracleUpdated is a free log subscription operation binding the contract event 0x078c3b417dadf69374a59793b829c52001247130433427049317bde56607b1b7.
+// WatchOracleAdded is a free log subscription operation binding the contract event 0x0047706786c922d17b39285dc59d696bafea72c0b003d3841ae1202076f4c2e4.
 //
-// Solidity: event OracleUpdated(address indexed oldOracle, address indexed newOracle)
-func (_HealChainStorage *HealChainStorageFilterer) WatchOracleUpdated(opts *bind.WatchOpts, sink chan<- *HealChainStorageOracleUpdated, oldOracle []common.Address, newOracle []common.Address) (event.Subscription, error) {
+// Solidity: event OracleAdded(address indexed oracle)
+func (_HealChainStorage *HealChainStorageFilterer) WatchOracleAdded(opts *bind.WatchOpts, sink chan<- *HealChainStorageOracleAdded, oracle []common.Address) (event.Subscription, error) {
 
-	var oldOracleRule []interface{}
-	for _, oldOracleItem := range oldOracle {
-		oldOracleRule = append(oldOracleRule, oldOracleItem)
-	}
-	var newOracleRule []interface{}
-	for _, newOracleItem := range newOracle {
-		newOracleRule = append(newOracleRule, newOracleItem)
+	var oracleRule []interface{}
+	for _, oracleItem := range oracle {
+		oracleRule = append(oracleRule, oracleItem)
 	}
 
-	logs, sub, err := _HealChainStorage.contract.WatchLogs(opts, "OracleUpdated", oldOracleRule, newOracleRule)
+	logs, sub, err := _HealChainStorage.contract.WatchLogs(opts, "OracleAdded", oracleRule)
 	if err != nil {
 		return nil, err
 	}
@@ -796,8 +870,8 @@ func (_HealChainStorage *HealChainStorageFilterer) WatchOracleUpdated(opts *bind
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(HealChainStorageOracleUpdated)
-				if err := _HealChainStorage.contract.UnpackLog(event, "OracleUpdated", log); err != nil {
+				event := new(HealChainStorageOracleAdded)
+				if err := _HealChainStorage.contract.UnpackLog(event, "OracleAdded", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -818,12 +892,156 @@ func (_HealChainStorage *HealChainStorageFilterer) WatchOracleUpdated(opts *bind
 	}), nil
 }
 
-// ParseOracleUpdated is a log parse operation binding the contract event 0x078c3b417dadf69374a59793b829c52001247130433427049317bde56607b1b7.
+// ParseOracleAdded is a log parse operation binding the contract event 0x0047706786c922d17b39285dc59d696bafea72c0b003d3841ae1202076f4c2e4.
 //
-// Solidity: event OracleUpdated(address indexed oldOracle, address indexed newOracle)
-func (_HealChainStorage *HealChainStorageFilterer) ParseOracleUpdated(log types.Log) (*HealChainStorageOracleUpdated, error) {
-	event := new(HealChainStorageOracleUpdated)
-	if err := _HealChainStorage.contract.UnpackLog(event, "OracleUpdated", log); err != nil {
+// Solidity: event OracleAdded(address indexed oracle)
+func (_HealChainStorage *HealChainStorageFilterer) ParseOracleAdded(log types.Log) (*HealChainStorageOracleAdded, error) {
+	event := new(HealChainStorageOracleAdded)
+	if err := _HealChainStorage.contract.UnpackLog(event, "OracleAdded", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// HealChainStorageOracleRemovedIterator is returned from FilterOracleRemoved and is used to iterate over the raw logs and unpacked data for OracleRemoved events raised by the HealChainStorage contract.
+type HealChainStorageOracleRemovedIterator struct {
+	Event *HealChainStorageOracleRemoved // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *HealChainStorageOracleRemovedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(HealChainStorageOracleRemoved)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(HealChainStorageOracleRemoved)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *HealChainStorageOracleRemovedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *HealChainStorageOracleRemovedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// HealChainStorageOracleRemoved represents a OracleRemoved event raised by the HealChainStorage contract.
+type HealChainStorageOracleRemoved struct {
+	Oracle common.Address
+	Raw    types.Log // Blockchain specific contextual infos
+}
+
+// FilterOracleRemoved is a free log retrieval operation binding the contract event 0x9c8e7d83025bef8a04c664b2f753f64b8814bdb7e27291d7e50935f18cc3c712.
+//
+// Solidity: event OracleRemoved(address indexed oracle)
+func (_HealChainStorage *HealChainStorageFilterer) FilterOracleRemoved(opts *bind.FilterOpts, oracle []common.Address) (*HealChainStorageOracleRemovedIterator, error) {
+
+	var oracleRule []interface{}
+	for _, oracleItem := range oracle {
+		oracleRule = append(oracleRule, oracleItem)
+	}
+
+	logs, sub, err := _HealChainStorage.contract.FilterLogs(opts, "OracleRemoved", oracleRule)
+	if err != nil {
+		return nil, err
+	}
+	return &HealChainStorageOracleRemovedIterator{contract: _HealChainStorage.contract, event: "OracleRemoved", logs: logs, sub: sub}, nil
+}
+
+// WatchOracleRemoved is a free log subscription operation binding the contract event 0x9c8e7d83025bef8a04c664b2f753f64b8814bdb7e27291d7e50935f18cc3c712.
+//
+// Solidity: event OracleRemoved(address indexed oracle)
+func (_HealChainStorage *HealChainStorageFilterer) WatchOracleRemoved(opts *bind.WatchOpts, sink chan<- *HealChainStorageOracleRemoved, oracle []common.Address) (event.Subscription, error) {
+
+	var oracleRule []interface{}
+	for _, oracleItem := range oracle {
+		oracleRule = append(oracleRule, oracleItem)
+	}
+
+	logs, sub, err := _HealChainStorage.contract.WatchLogs(opts, "OracleRemoved", oracleRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(HealChainStorageOracleRemoved)
+				if err := _HealChainStorage.contract.UnpackLog(event, "OracleRemoved", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseOracleRemoved is a log parse operation binding the contract event 0x9c8e7d83025bef8a04c664b2f753f64b8814bdb7e27291d7e50935f18cc3c712.
+//
+// Solidity: event OracleRemoved(address indexed oracle)
+func (_HealChainStorage *HealChainStorageFilterer) ParseOracleRemoved(log types.Log) (*HealChainStorageOracleRemoved, error) {
+	event := new(HealChainStorageOracleRemoved)
+	if err := _HealChainStorage.contract.UnpackLog(event, "OracleRemoved", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
@@ -977,322 +1195,6 @@ func (_HealChainStorage *HealChainStorageFilterer) WatchRecordDeleted(opts *bind
 func (_HealChainStorage *HealChainStorageFilterer) ParseRecordDeleted(log types.Log) (*HealChainStorageRecordDeleted, error) {
 	event := new(HealChainStorageRecordDeleted)
 	if err := _HealChainStorage.contract.UnpackLog(event, "RecordDeleted", log); err != nil {
-		return nil, err
-	}
-	event.Raw = log
-	return event, nil
-}
-
-// HealChainStorageRetrieveRequestedIterator is returned from FilterRetrieveRequested and is used to iterate over the raw logs and unpacked data for RetrieveRequested events raised by the HealChainStorage contract.
-type HealChainStorageRetrieveRequestedIterator struct {
-	Event *HealChainStorageRetrieveRequested // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *HealChainStorageRetrieveRequestedIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(HealChainStorageRetrieveRequested)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(HealChainStorageRetrieveRequested)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *HealChainStorageRetrieveRequestedIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *HealChainStorageRetrieveRequestedIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// HealChainStorageRetrieveRequested represents a RetrieveRequested event raised by the HealChainStorage contract.
-type HealChainStorageRetrieveRequested struct {
-	RequestId *big.Int
-	RecordId  *big.Int
-	Requester common.Address
-	Raw       types.Log // Blockchain specific contextual infos
-}
-
-// FilterRetrieveRequested is a free log retrieval operation binding the contract event 0x447bbbc2530e25ac3ddf0a6fb50c4d4bb54b7e1007ff47a0d37a64d7c9ffd62f.
-//
-// Solidity: event RetrieveRequested(uint256 indexed requestId, uint256 indexed recordId, address indexed requester)
-func (_HealChainStorage *HealChainStorageFilterer) FilterRetrieveRequested(opts *bind.FilterOpts, requestId []*big.Int, recordId []*big.Int, requester []common.Address) (*HealChainStorageRetrieveRequestedIterator, error) {
-
-	var requestIdRule []interface{}
-	for _, requestIdItem := range requestId {
-		requestIdRule = append(requestIdRule, requestIdItem)
-	}
-	var recordIdRule []interface{}
-	for _, recordIdItem := range recordId {
-		recordIdRule = append(recordIdRule, recordIdItem)
-	}
-	var requesterRule []interface{}
-	for _, requesterItem := range requester {
-		requesterRule = append(requesterRule, requesterItem)
-	}
-
-	logs, sub, err := _HealChainStorage.contract.FilterLogs(opts, "RetrieveRequested", requestIdRule, recordIdRule, requesterRule)
-	if err != nil {
-		return nil, err
-	}
-	return &HealChainStorageRetrieveRequestedIterator{contract: _HealChainStorage.contract, event: "RetrieveRequested", logs: logs, sub: sub}, nil
-}
-
-// WatchRetrieveRequested is a free log subscription operation binding the contract event 0x447bbbc2530e25ac3ddf0a6fb50c4d4bb54b7e1007ff47a0d37a64d7c9ffd62f.
-//
-// Solidity: event RetrieveRequested(uint256 indexed requestId, uint256 indexed recordId, address indexed requester)
-func (_HealChainStorage *HealChainStorageFilterer) WatchRetrieveRequested(opts *bind.WatchOpts, sink chan<- *HealChainStorageRetrieveRequested, requestId []*big.Int, recordId []*big.Int, requester []common.Address) (event.Subscription, error) {
-
-	var requestIdRule []interface{}
-	for _, requestIdItem := range requestId {
-		requestIdRule = append(requestIdRule, requestIdItem)
-	}
-	var recordIdRule []interface{}
-	for _, recordIdItem := range recordId {
-		recordIdRule = append(recordIdRule, recordIdItem)
-	}
-	var requesterRule []interface{}
-	for _, requesterItem := range requester {
-		requesterRule = append(requesterRule, requesterItem)
-	}
-
-	logs, sub, err := _HealChainStorage.contract.WatchLogs(opts, "RetrieveRequested", requestIdRule, recordIdRule, requesterRule)
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(HealChainStorageRetrieveRequested)
-				if err := _HealChainStorage.contract.UnpackLog(event, "RetrieveRequested", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseRetrieveRequested is a log parse operation binding the contract event 0x447bbbc2530e25ac3ddf0a6fb50c4d4bb54b7e1007ff47a0d37a64d7c9ffd62f.
-//
-// Solidity: event RetrieveRequested(uint256 indexed requestId, uint256 indexed recordId, address indexed requester)
-func (_HealChainStorage *HealChainStorageFilterer) ParseRetrieveRequested(log types.Log) (*HealChainStorageRetrieveRequested, error) {
-	event := new(HealChainStorageRetrieveRequested)
-	if err := _HealChainStorage.contract.UnpackLog(event, "RetrieveRequested", log); err != nil {
-		return nil, err
-	}
-	event.Raw = log
-	return event, nil
-}
-
-// HealChainStorageRetrievedIterator is returned from FilterRetrieved and is used to iterate over the raw logs and unpacked data for Retrieved events raised by the HealChainStorage contract.
-type HealChainStorageRetrievedIterator struct {
-	Event *HealChainStorageRetrieved // Event containing the contract specifics and raw log
-
-	contract *bind.BoundContract // Generic contract to use for unpacking event data
-	event    string              // Event name to use for unpacking event data
-
-	logs chan types.Log        // Log channel receiving the found contract events
-	sub  ethereum.Subscription // Subscription for errors, completion and termination
-	done bool                  // Whether the subscription completed delivering logs
-	fail error                 // Occurred error to stop iteration
-}
-
-// Next advances the iterator to the subsequent event, returning whether there
-// are any more events found. In case of a retrieval or parsing error, false is
-// returned and Error() can be queried for the exact failure.
-func (it *HealChainStorageRetrievedIterator) Next() bool {
-	// If the iterator failed, stop iterating
-	if it.fail != nil {
-		return false
-	}
-	// If the iterator completed, deliver directly whatever's available
-	if it.done {
-		select {
-		case log := <-it.logs:
-			it.Event = new(HealChainStorageRetrieved)
-			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-				it.fail = err
-				return false
-			}
-			it.Event.Raw = log
-			return true
-
-		default:
-			return false
-		}
-	}
-	// Iterator still in progress, wait for either a data or an error event
-	select {
-	case log := <-it.logs:
-		it.Event = new(HealChainStorageRetrieved)
-		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
-			it.fail = err
-			return false
-		}
-		it.Event.Raw = log
-		return true
-
-	case err := <-it.sub.Err():
-		it.done = true
-		it.fail = err
-		return it.Next()
-	}
-}
-
-// Error returns any retrieval or parsing error occurred during filtering.
-func (it *HealChainStorageRetrievedIterator) Error() error {
-	return it.fail
-}
-
-// Close terminates the iteration process, releasing any pending underlying
-// resources.
-func (it *HealChainStorageRetrievedIterator) Close() error {
-	it.sub.Unsubscribe()
-	return nil
-}
-
-// HealChainStorageRetrieved represents a Retrieved event raised by the HealChainStorage contract.
-type HealChainStorageRetrieved struct {
-	RecordId *big.Int
-	Caller   common.Address
-	Verified bool
-	Raw      types.Log // Blockchain specific contextual infos
-}
-
-// FilterRetrieved is a free log retrieval operation binding the contract event 0xe3086fe6321b51142821be491f79abf73cd9046082dd1d6b6bd7ee7c732fc453.
-//
-// Solidity: event Retrieved(uint256 indexed recordId, address indexed caller, bool verified)
-func (_HealChainStorage *HealChainStorageFilterer) FilterRetrieved(opts *bind.FilterOpts, recordId []*big.Int, caller []common.Address) (*HealChainStorageRetrievedIterator, error) {
-
-	var recordIdRule []interface{}
-	for _, recordIdItem := range recordId {
-		recordIdRule = append(recordIdRule, recordIdItem)
-	}
-	var callerRule []interface{}
-	for _, callerItem := range caller {
-		callerRule = append(callerRule, callerItem)
-	}
-
-	logs, sub, err := _HealChainStorage.contract.FilterLogs(opts, "Retrieved", recordIdRule, callerRule)
-	if err != nil {
-		return nil, err
-	}
-	return &HealChainStorageRetrievedIterator{contract: _HealChainStorage.contract, event: "Retrieved", logs: logs, sub: sub}, nil
-}
-
-// WatchRetrieved is a free log subscription operation binding the contract event 0xe3086fe6321b51142821be491f79abf73cd9046082dd1d6b6bd7ee7c732fc453.
-//
-// Solidity: event Retrieved(uint256 indexed recordId, address indexed caller, bool verified)
-func (_HealChainStorage *HealChainStorageFilterer) WatchRetrieved(opts *bind.WatchOpts, sink chan<- *HealChainStorageRetrieved, recordId []*big.Int, caller []common.Address) (event.Subscription, error) {
-
-	var recordIdRule []interface{}
-	for _, recordIdItem := range recordId {
-		recordIdRule = append(recordIdRule, recordIdItem)
-	}
-	var callerRule []interface{}
-	for _, callerItem := range caller {
-		callerRule = append(callerRule, callerItem)
-	}
-
-	logs, sub, err := _HealChainStorage.contract.WatchLogs(opts, "Retrieved", recordIdRule, callerRule)
-	if err != nil {
-		return nil, err
-	}
-	return event.NewSubscription(func(quit <-chan struct{}) error {
-		defer sub.Unsubscribe()
-		for {
-			select {
-			case log := <-logs:
-				// New log arrived, parse the event and forward to the user
-				event := new(HealChainStorageRetrieved)
-				if err := _HealChainStorage.contract.UnpackLog(event, "Retrieved", log); err != nil {
-					return err
-				}
-				event.Raw = log
-
-				select {
-				case sink <- event:
-				case err := <-sub.Err():
-					return err
-				case <-quit:
-					return nil
-				}
-			case err := <-sub.Err():
-				return err
-			case <-quit:
-				return nil
-			}
-		}
-	}), nil
-}
-
-// ParseRetrieved is a log parse operation binding the contract event 0xe3086fe6321b51142821be491f79abf73cd9046082dd1d6b6bd7ee7c732fc453.
-//
-// Solidity: event Retrieved(uint256 indexed recordId, address indexed caller, bool verified)
-func (_HealChainStorage *HealChainStorageFilterer) ParseRetrieved(log types.Log) (*HealChainStorageRetrieved, error) {
-	event := new(HealChainStorageRetrieved)
-	if err := _HealChainStorage.contract.UnpackLog(event, "Retrieved", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
