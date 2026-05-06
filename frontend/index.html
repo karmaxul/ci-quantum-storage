@@ -589,18 +589,24 @@ function fallbackCopy(text, btn) {
   async function storeData() {
     if (!validateData() || !validateLabel()) return;
 
-    const raw   = document.getElementById("dataInput").value.trim();
-    const label = document.getElementById("labelInput").value.trim() || "browser demo";
+    const raw    = document.getElementById("dataInput").value.trim();
+    const label  = document.getElementById("labelInput").value.trim() || "browser demo";
+    const net    = getNet();
 
     setLoading("storeBtn", true, "Storing...");
     setResult("storeResult", "Sending to service...", "");
 
     try {
-      const res  = await fetch(`${SVC()}/storeOnChain`, {
+      const res = await fetch(`${SVC()}/storeOnChain`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: strToHex(raw), label })
+        body: JSON.stringify({
+          data:    strToHex(raw),
+          label:   label,
+          network: currentNetwork
+        })
       });
+
       const json = await res.json();
 
       if (!res.ok) {
@@ -609,11 +615,33 @@ function fallbackCopy(text, btn) {
         return;
       }
 
+      // ── Sepolia async path ──────────────────────────────────────────────
+      if (json.status === "pending" && json.requestId !== undefined) {
+        const explorer  = EXPLORER_BASE();
+        const txLink    = explorer
+          ? `<a href="${explorer}/${json.tx}" target="_blank" rel="noopener">${escapeHtml(json.tx)}</a>`
+          : escapeHtml(json.tx);
+
+        setResult("storeResult",
+          `⏳ Submitted to Sepolia!\n` +
+          `Request ID:   ${escapeHtml(json.requestId)} <button class="copy-btn" onclick="copyToClipboard('${json.requestId}',this)">copy</button>\n` +
+          `Tx:           ${txLink}\n` +
+          `Status:       Waiting for oracle fulfillment...\n` +
+          `Explorer:     <a href="${escapeHtml(json.explorerUrl)}" target="_blank" rel="noopener">View on Etherscan</a>`,
+          ""
+        );
+
+        toast("⏳ Submitted — waiting for oracle...");
+        pollSepoliaStatus(json.requestId, json.tx);
+        return;
+      }
+
+      // ── Devnet sync path ────────────────────────────────────────────────
       const explorer = EXPLORER_BASE();
-      const txLink = explorer
+      const txLink   = explorer
         ? `<a href="${explorer}/${json.tx}" target="_blank" rel="noopener">${escapeHtml(json.tx)}</a>`
         : escapeHtml(json.tx);
-      const retUrl = `${SVC()}/retrieve?id=${json.recordId}`;
+      const retUrl   = `${SVC()}/retrieve?id=${json.recordId}`;
 
       setResult("storeResult",
         `✅ Stored successfully!\n` +
@@ -635,6 +663,64 @@ function fallbackCopy(text, btn) {
       toast("Network error", "err");
     } finally {
       setLoading("storeBtn", false, "Store Data");
+    }
+  }
+
+  // ── Sepolia fulfillment polling ───────────────────────────────────────────
+
+  async function pollSepoliaStatus(requestId, txHash, attempt = 0) {
+    const maxAttempts = 20; // 20 × 6s = 2 minutes max
+    const explorer    = EXPLORER_BASE();
+    const txLink      = explorer
+      ? `<a href="${explorer}/${txHash}" target="_blank" rel="noopener">${escapeHtml(txHash)}</a>`
+      : escapeHtml(txHash);
+
+    if (attempt >= maxAttempts) {
+      setResult("storeResult",
+        `⚠ Oracle taking longer than expected.\n` +
+        `Request ID: ${escapeHtml(requestId)}\n` +
+        `Tx:         ${txLink}\n` +
+        `Check status manually: ${SVC()}/sepoliaStatus?requestId=${requestId}`,
+        "err"
+      );
+      return;
+    }
+
+    await new Promise(r => setTimeout(r, 6000)); // wait 6s between polls
+
+    try {
+      const res  = await fetch(`${SVC()}/sepoliaStatus?requestId=${requestId}`);
+      const json = await res.json();
+
+      if (json.status === "fulfilled") {
+        setResult("storeResult",
+          `✅ Stored on Sepolia!\n` +
+          `Request ID:    ${escapeHtml(requestId)} <button class="copy-btn" onclick="copyToClipboard('${requestId}',this)">copy</button>\n` +
+          `Tx:            ${txLink}\n` +
+          `Total records: ${escapeHtml(json.totalRecords)} on Sepolia\n` +
+          `Explorer:      <a href="https://sepolia.etherscan.io/address/${escapeHtml(json.contract)}" target="_blank" rel="noopener">View contract</a>`,
+          "ok"
+        );
+        toast("✅ Stored on Sepolia!", "ok");
+        loadRecords(0);
+        checkStatus();
+        return;
+      }
+
+      // Still pending — update UI and poll again
+      setResult("storeResult",
+        `⏳ Submitted to Sepolia!\n` +
+        `Request ID:   ${escapeHtml(requestId)}\n` +
+        `Tx:           ${txLink}\n` +
+        `Status:       Oracle processing... (attempt ${attempt + 1}/${maxAttempts})\n` +
+        `Explorer:     <a href="https://sepolia.etherscan.io/tx/${txHash}" target="_blank" rel="noopener">View on Etherscan</a>`,
+        ""
+      );
+
+      pollSepoliaStatus(requestId, txHash, attempt + 1);
+
+    } catch (err) {
+      pollSepoliaStatus(requestId, txHash, attempt + 1);
     }
   }
 
