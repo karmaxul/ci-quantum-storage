@@ -25,6 +25,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	binding "ci-sha-test/binding"
+	bindingsepolia "ci-sha-test/binding-sepolia"
 	"ci-sha-test/healchain"
 )
 
@@ -199,6 +200,7 @@ func main() {
 	mux.HandleFunc("/getMetadata", handleGetMetadata)
 	mux.HandleFunc("/listRecords", handleListRecords)
 	mux.HandleFunc("/delete", handleDelete)
+	mux.HandleFunc("/sepoliaStatus", handleSepoliaStatus)
 
 	// Service info
 	mux.HandleFunc("/health", handleHealth)
@@ -450,6 +452,7 @@ func handleStoreOnChain(w http.ResponseWriter, r *http.Request) {
 		Label        string `json:"label"`
 		DataShards   uint8  `json:"dataShards"`
 		ParityShards uint8  `json:"parityShards"`
+		Network      string `json:"network"` // "devnet" (default) or "sepolia"
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonErr(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
@@ -475,6 +478,25 @@ func handleStoreOnChain(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := validateInput(data, req.Label); err != nil {
 		jsonErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	// ── Route to Sepolia if requested ─────────────────────────────────────
+	if strings.ToLower(req.Network) == "sepolia" {
+		txHash, requestID, err := sepoliaStoreOnChain(data, req.Label)
+		if err != nil {
+			jsonErr(w, http.StatusInternalServerError, "sepolia store failed: "+err.Error())
+			return
+		}
+		jsonOK(w, map[string]interface{}{
+			"status":      "pending",
+			"network":     "sepolia",
+			"tx":          txHash,
+			"requestId":   requestID,
+			"message":     "Store submitted to Sepolia. Oracle will fulfill within ~30s.",
+			"statusUrl":   fmt.Sprintf("http://localhost:8080/sepoliaStatus?requestId=%s", requestID),
+			"contract":    getEnv("SEPOLIA_CONTRACT_ADDRESS", ""),
+			"explorerUrl": fmt.Sprintf("https://sepolia.etherscan.io/tx/%s", txHash),
+		})
 		return
 	}
 	fmt.Printf("StoreOnChain: %d bytes, label: %s, shards: %d/%d\n",
@@ -863,5 +885,73 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 		"status":   "success",
 		"recordId": idStr,
 		"tx":       tx.Hash().Hex(),
+	})
+}
+
+// ── handleSepoliaStatus ───────────────────────────────────────────────────────
+
+func handleSepoliaStatus(w http.ResponseWriter, r *http.Request) {
+	requestIdStr := r.URL.Query().Get("requestId")
+	if requestIdStr == "" {
+		jsonErr(w, http.StatusBadRequest, "missing ?requestId= parameter")
+		return
+	}
+
+	sepoliaURL := getEnv("SEPOLIA_RPC_URL", "")
+	contractAddr := getEnv("SEPOLIA_CONTRACT_ADDRESS", "")
+
+	if sepoliaURL == "" || contractAddr == "" {
+		jsonErr(w, http.StatusInternalServerError, "Sepolia not configured")
+		return
+	}
+
+	client, err := ethclient.Dial(sepoliaURL)
+	if err != nil {
+		jsonErr(w, http.StatusInternalServerError, "failed to connect to Sepolia: "+err.Error())
+		return
+	}
+	defer client.Close()
+
+	addr := common.HexToAddress(contractAddr)
+	instance, err := bindingsepolia.NewHealChainStorage(addr, client)
+	if err != nil {
+		jsonErr(w, http.StatusInternalServerError, "failed to load contract: "+err.Error())
+		return
+	}
+
+	requestId := new(big.Int)
+	if _, ok := requestId.SetString(requestIdStr, 10); !ok {
+		jsonErr(w, http.StatusBadRequest, "invalid requestId")
+		return
+	}
+
+	pending, err := instance.IsPending(nil, requestId)
+	if err != nil {
+		jsonErr(w, http.StatusInternalServerError, "isPending failed: "+err.Error())
+		return
+	}
+
+	if pending {
+		jsonOK(w, map[string]interface{}{
+			"status":    "pending",
+			"requestId": requestIdStr,
+			"message":   "Oracle is processing — check back in a few seconds",
+		})
+		return
+	}
+
+	// Not pending means fulfilled — find the record ID from total records
+	total, err := instance.TotalRecords(nil)
+	if err != nil {
+		jsonErr(w, http.StatusInternalServerError, "totalRecords failed: "+err.Error())
+		return
+	}
+
+	jsonOK(w, map[string]interface{}{
+		"status":       "fulfilled",
+		"requestId":    requestIdStr,
+		"totalRecords": total.String(),
+		"message":      "Store fulfilled by oracle",
+		"contract":     contractAddr,
 	})
 }
