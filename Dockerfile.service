@@ -15,7 +15,7 @@ RUN go mod download
 COPY . .
 
 # Build the service binary
-RUN go build -o healchain-service healchain-service.go oracle.go
+RUN go build -o healchain-service healchain-service.go oracle.go ratelimit.go
 
 # ── Runtime image ─────────────────────────────────────────────────────────────
 FROM alpine:3.19

@@ -41,6 +41,9 @@ var (
 	// Set in main() once if Sepolia config is present. Read by /metrics.
 	sepoliaOracle    *Oracle
 	serviceStartedAt = time.Now()
+
+	// Set in main() before serving. Used by withRateLimit middleware and /metrics.
+	serviceLimiter *rateLimiter
 )
 
 const serviceVersion = "2.4"
@@ -219,9 +222,24 @@ func main() {
 		w.Write([]byte("Nuclear test successful"))
 	})
 
+	// Rate limiter — configurable via env vars, applied between CORS and Auth.
+	ipPerMin := 30
+	if v := os.Getenv("RATE_LIMIT_IP_PER_MIN"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			ipPerMin = n
+		}
+	}
+	keyPerMin := 60
+	if v := os.Getenv("RATE_LIMIT_KEY_PER_MIN"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			keyPerMin = n
+		}
+	}
+	serviceLimiter = newRateLimiter(ipPerMin, keyPerMin, getEnv("RATE_LIMIT_WHITELIST", ""))
+
 	srv := &http.Server{
 		Addr:    listenAddr,
-		Handler: withCORS(withAuth(mux)),
+		Handler: withCORS(withRateLimit(serviceLimiter, withAuth(mux))),
 	}
 
 	// Graceful shutdown on SIGTERM / SIGINT
@@ -240,6 +258,8 @@ func main() {
 	fmt.Printf("   Contract:  %s\n", contractAddress)
 	fmt.Printf("   Geth:      %s\n", gethURL)
 	fmt.Printf("   Listening: %s\n", listenAddr)
+	fmt.Printf("   Rate limit: ip=%d/min key=%d/min (exempt: /health /stats /metrics; whitelist=%d)\n",
+		ipPerMin, keyPerMin, len(serviceLimiter.whitelist))
 	fmt.Println("Listening...")
 
 	// ── Start Sepolia oracle if configured ───────────────────────────────────
@@ -960,6 +980,10 @@ func handleMetrics(w http.ResponseWriter, r *http.Request) {
 			"healthy":      false,
 			"healthReason": "SEPOLIA_RPC_URL or SEPOLIA_CONTRACT_ADDRESS not configured",
 		}
+	}
+
+	if serviceLimiter != nil {
+		resp["rateLimit"] = serviceLimiter.Stats()
 	}
 
 	jsonOK(w, resp)
